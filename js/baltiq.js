@@ -796,9 +796,9 @@ function headerHTML(active) {
   return `
     <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
-        <a href="index.html" class="flex items-center gap-3 shrink-0">
-          <div class="w-12 h-12 bg-cyan-500 text-slate-900 rounded-xl flex items-center justify-center text-2xl font-black">B</div>
-          <span class="text-3xl font-black text-white">BALTIQ</span>
+        <a href="index.html" class="flex items-center gap-3 shrink-0" aria-label="BALTIQ">
+          <img src="assets/logo-mark.svg" alt="" width="44" height="44" class="w-11 h-11" decoding="async">
+          <span class="text-3xl font-black tracking-tight text-white">BALTIQ<span class="text-cyan-400">.</span></span>
         </a>
         <nav class="hidden md:flex items-center gap-8">
           ${nav("index.html", t("navCatalog"), "catalog")}
@@ -818,8 +818,11 @@ function headerHTML(active) {
 function footerHTML() {
   return `
     <footer class="border-t border-slate-800 mt-16 py-8 text-base text-slate-400">
-      <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row gap-3 justify-between">
-        <p>${t("footer")}</p>
+      <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <div class="flex items-start gap-3">
+          <img src="assets/logo-mark.svg" alt="" width="32" height="32" class="w-8 h-8 mt-0.5 opacity-90" decoding="async">
+          <p>${t("footer")}</p>
+        </div>
         <p>${t("footerShip")} · <a class="text-cyan-400" href="admin.html">${t("navAdmin")}</a></p>
       </div>
     </footer>`;
@@ -832,7 +835,17 @@ function inSubGroup(item, group) {
   return kids.includes(item.subcategory);
 }
 
+function ensureFavicon() {
+  if (document.querySelector('link[rel="icon"][href*="favicon"]')) return;
+  const link = document.createElement("link");
+  link.rel = "icon";
+  link.type = "image/svg+xml";
+  link.href = "assets/favicon.svg";
+  document.head.appendChild(link);
+}
+
 function injectChrome(active) {
+  ensureFavicon();
   const headerMount = document.getElementById("app-header");
   const footerMount = document.getElementById("app-footer");
   if (headerMount) headerMount.innerHTML = headerHTML(active);

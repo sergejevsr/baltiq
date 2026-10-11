@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Варианты логотипа — BALTIQ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .opt[aria-pressed="true"] { border-color: #22d3ee; background: rgba(34,211,238,.1); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <header class="sticky top-0 z-50 bg-slate-900 border-b border-slate-800">
+    <div class="max-w-5xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
+      <div id="preview" class="flex items-center gap-3 min-h-[44px]"></div>
+      <a href="index.html" class="text-sm font-bold text-cyan-400">← На сайт</a>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-10 space-y-8">
+    <div class="space-y-3 max-w-2xl">
+      <p class="text-cyan-400 text-sm font-bold uppercase tracking-wide">Сравнение логотипов</p>
+      <h1 class="text-3xl sm:text-4xl font-black leading-tight">Выберите вариант A–G</h1>
+      <p class="text-slate-300 text-lg leading-relaxed">
+        Кликните карточку — превью появится в шапке сверху.
+        Напишите в чат букву (например «ставь A»), и я подключу её на сайт.
+      </p>
+    </div>
+
+    <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+  </main>
+
+  <script>
+    const OPTIONS = [
+      { id: "a", file: "a-monogram.svg", title: "A · Монограмма B", why: "Самый ясный: буква бренда. Хорошо в favicon.", mark: true },
+      { id: "b", file: "b-parcel.svg", title: "B · Коробка", why: "Сразу «товар / посылка».", mark: true },
+      { id: "c", file: "c-qmark.svg", title: "C · Буква Q", why: "Уникальная буква в BALTIQ.", mark: true },
+      { id: "d", file: "d-wave.svg", title: "D · B + волна", why: "Намёк на Балтику.", mark: true },
+      { id: "e", file: "e-dots.svg", title: "E · B + три точки", why: "Три страны (LV, LT, EE).", mark: true },
+      { id: "f", file: "f-locker.svg", title: "F · Пакомат (старый)", why: "Исходный — легко путается с «сигналом».", mark: true },
+      { id: "g", file: "g-wordmark.svg", title: "G · Только слово", why: "Без иконки, cyan на Q.", mark: false },
+    ];
+
+    let selected = "a";
+
+    function renderPreview() {
+      const opt = OPTIONS.find((o) => o.id === selected);
+      const el = document.getElementById("preview");
+      if (!opt.mark) {
+        el.innerHTML = `<img src="assets/logo-variants/${opt.file}" alt="BALTIQ" class="h-9" height="36">`;
+        return;
+      }
+      el.innerHTML = `
+        <img src="assets/logo-variants/${opt.file}" alt="" width="44" height="44" class="w-11 h-11">
+        <span class="text-3xl font-black tracking-tight text-white">BALTIQ<span class="text-cyan-400">.</span></span>`;
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById("grid");
+      grid.innerHTML = OPTIONS.map((opt) => `
+        <button type="button" class="opt text-left rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-4"
+          data-id="${opt.id}" aria-pressed="${opt.id === selected}">
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-base font-bold text-white">${opt.title}</span>
+            ${opt.id === selected ? '<span class="text-xs font-bold text-cyan-300">выбран</span>' : ""}
+          </div>
+          <div class="h-28 rounded-xl bg-black/40 border border-slate-800 flex items-center justify-center px-4">
+            ${opt.mark
+              ? `<div class="flex items-center gap-3">
+                   <img src="assets/logo-variants/${opt.file}" alt="" width="64" height="64" class="w-16 h-16">
+                   <span class="text-3xl font-black tracking-tight">BALTIQ<span class="text-cyan-400">.</span></span>
+                 </div>`
+              : `<img src="assets/logo-variants/${opt.file}" alt="BALTIQ" class="h-12">`}
+          </div>
+          <p class="text-sm text-slate-300 leading-relaxed">${opt.why}</p>
+        </button>`).join("");
+
+      grid.querySelectorAll(".opt").forEach((btn) => {
+        btn.onclick = () => {
+          selected = btn.dataset.id;
+          renderGrid();
+          renderPreview();
+        };
+      });
+    }
+
+    renderGrid();
+    renderPreview();
+  </script>
+</body>
+</html>
