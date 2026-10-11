@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Варианты логотипа — BALTIQ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .opt:focus-visible { outline: 2px solid #22d3ee; outline-offset: 2px; }
+    .opt[aria-pressed="true"] { border-color: #22d3ee; background: rgba(34,211,238,.08); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <header class="sticky top-0 z-50 bg-slate-900 border-b border-slate-800">
+    <div class="max-w-5xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
+      <div id="preview" class="flex items-center gap-3"></div>
+      <p class="text-sm text-slate-400 hidden sm:block">Превью в шапке · кликните вариант</p>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-10 space-y-8">
+    <div class="space-y-3 max-w-2xl">
+      <p class="text-cyan-400 text-sm font-bold uppercase tracking-wide">Почему был тот лого</p>
+      <h1 class="text-3xl sm:text-4xl font-black leading-tight">Три ячейки пакомата — логично, но слабо читается.</h1>
+      <p class="text-slate-300 text-lg leading-relaxed">
+        Идея была: BALTIQ = посылки через пакоматы в трёх странах → три дверцы.
+        На практике знак похож на эквалайзер или уровень сигнала, а не на бренд.
+        Ниже — более скромные и понятные варианты. Выберите букву (A–G).
+      </p>
+    </div>
+
+    <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+
+    <p class="text-slate-500 text-sm">
+      Файлы: <code class="text-slate-400">assets/logo-variants/</code> ·
+      после выбора можно сказать «ставь B» / «ставь Q» и т.д.
+    </p>
+  </main>
+
+  <script>
+    const OPTIONS = [
+      {
+        id: "a",
+        file: "a-monogram.svg",
+        title: "A · Монограмма B",
+        why: "Самый ясный знак: буква бренда. Работает в 16px и в favicon. Нейтрально, почти как у банков/маркетплейсов.",
+        mark: true,
+      },
+      {
+        id: "b",
+        file: "b-parcel.svg",
+        title: "B · Коробка",
+        why: "Сразу «товар / посылка». Ближе к сути BALTIQ, чем абстрактные полоски, и не путается с сигналом.",
+        mark: true,
+      },
+      {
+        id: "c",
+        file: "c-qmark.svg",
+        title: "C · Буква Q",
+        why: "Q — уникальная буква в названии. Знак запоминается, не спорит с текстом BALTIQ рядом.",
+        mark: true,
+      },
+      {
+        id: "d",
+        file: "d-wave.svg",
+        title: "D · B + волна",
+        why: "Намёк на Балтику без флагов. Чуть более «брендовый», но всё ещё скромный.",
+        mark: true,
+      },
+      {
+        id: "e",
+        file: "e-dots.svg",
+        title: "E · B + три точки",
+        why: "Три страны (LV, LT, EE) без иконки пакомата. Тише, чем три полоски, и понятнее.",
+        mark: true,
+      },
+      {
+        id: "f",
+        file: "f-locker.svg",
+        title: "F · Пакомат (текущий)",
+        why: "Исходный вариант. Смысл есть, но метафора слишком абстрактна — легко читается неверно.",
+        mark: true,
+      },
+      {
+        id: "g",
+        file: "g-wordmark.svg",
+        title: "G · Только слово",
+        why: "Самый скромный: без иконки, cyan только на Q. Хорошо, если бренд держится на названии.",
+        mark: false,
+      },
+    ];
+
+    let selected = "a";
+
+    function renderPreview() {
+      const opt = OPTIONS.find((o) => o.id === selected);
+      const el = document.getElementById("preview");
+      if (!opt.mark) {
+        el.innerHTML = `<img src="assets/logo-variants/${opt.file}" alt="BALTIQ" class="h-9" height="36">`;
+        return;
+      }
+      el.innerHTML = `
+        <img src="assets/logo-variants/${opt.file}" alt="" width="44" height="44" class="w-11 h-11">
+        <span class="text-3xl font-black tracking-tight text-white">BALTIQ<span class="text-cyan-400">.</span></span>`;
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById("grid");
+      grid.innerHTML = OPTIONS.map((opt) => `
+        <button type="button" class="opt text-left rounded-2xl border border-slate-800 bg-slate-900/80 p-5 space-y-4 transition hover:border-slate-600"
+          data-id="${opt.id}" aria-pressed="${opt.id === selected}">
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-sm font-bold text-slate-400">${opt.title}</span>
+            ${opt.id === selected ? '<span class="text-xs font-bold text-cyan-300">выбран</span>' : ""}
+          </div>
+          <div class="h-24 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center px-4">
+            ${opt.mark
+              ? `<div class="flex items-center gap-3">
+                   <img src="assets/logo-variants/${opt.file}" alt="" class="w-14 h-14">
+                   <span class="text-2xl font-black tracking-tight">BALTIQ<span class="text-cyan-400">.</span></span>
+                 </div>`
+              : `<img src="assets/logo-variants/${opt.file}" alt="BALTIQ" class="h-10">`}
+          </div>
+          <p class="text-sm text-slate-300 leading-relaxed">${opt.why}</p>
+        </button>`).join("");
+
+      grid.querySelectorAll(".opt").forEach((btn) => {
+        btn.onclick = () => {
+          selected = btn.dataset.id;
+          renderGrid();
+          renderPreview();
+          history.replaceState(null, "", "?v=" + selected);
+        };
+      });
+    }
+
+    const fromUrl = new URLSearchParams(location.search).get("v");
+    if (fromUrl && OPTIONS.some((o) => o.id === fromUrl)) selected = fromUrl;
+    renderGrid();
+    renderPreview();
+  </script>
+</body>
+</html>
