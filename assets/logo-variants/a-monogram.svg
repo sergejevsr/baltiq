@@ -1,5 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="BALTIQ monogram">
-  <!-- A: 1C:20 B  A@07C 1@5=4, 157 <5B0D>@ -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
   <rect width="40" height="40" rx="10" fill="#22d3ee"/>
-  <text x="20" y="28" text-anchor="middle" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="22" font-weight="800" fill="#0f172a">B</text>
+  <text x="20" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="800" fill="#0f172a">B</text>
 </svg>

@@ -1,5 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="BALTIQ Q">
-  <!-- C: 1C:20 Q  C=8:0;L=0O 2 =0720=88, «B>G:0» :0: 0:F5=B -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
   <rect width="40" height="40" rx="10" fill="#22d3ee"/>
   <circle cx="19" cy="19" r="9" fill="none" stroke="#0f172a" stroke-width="3.2"/>
   <path d="M24.5 24.5 L29 30" stroke="#0f172a" stroke-width="3.2" stroke-linecap="round"/>

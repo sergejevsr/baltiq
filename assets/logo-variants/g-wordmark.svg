@@ -1,5 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" role="img" aria-label="BALTIQ">
-  <!-- G: B>;L:> A;>2>  A0<K9 A:@><=K9 20@80=B 157 8:>=:8 -->
-  <text x="0" y="29" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="28" font-weight="800" letter-spacing="0.5" fill="#f8fafc">BALTI</text>
-  <text x="95" y="29" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="28" font-weight="800" fill="#22d3ee">Q</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40">
+  <text x="0" y="29" font-family="Arial, sans-serif" font-size="28" font-weight="800" letter-spacing="0.5" fill="#f8fafc">BALTI</text>
+  <text x="95" y="29" font-family="Arial, sans-serif" font-size="28" font-weight="800" fill="#22d3ee">Q</text>
 </svg>
