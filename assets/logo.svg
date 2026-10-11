@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" role="img" aria-label="BALTIQ">
+  <title>BALTIQ</title>
+  <!-- Mark: parcel locker, three cells = Baltics -->
+  <rect x="0" y="4" width="40" height="40" rx="10" fill="#22d3ee"/>
+  <rect x="8" y="12" width="7" height="24" rx="2" fill="#0f172a"/>
+  <rect x="16.5" y="12" width="7" height="24" rx="2" fill="#0f172a"/>
+  <rect x="25" y="12" width="7" height="24" rx="2" fill="#0f172a"/>
+  <!-- small open latch on middle cell -->
+  <circle cx="20" cy="20" r="1.4" fill="#22d3ee"/>
+  <!-- Wordmark -->
+  <text x="52" y="33" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="26" font-weight="800" letter-spacing="0.5" fill="#f8fafc">BALTIQ</text>
+</svg>
