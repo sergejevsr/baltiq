@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Профиль — BALTIQ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div id="app-header"></div>
+  <main class="max-w-6xl mx-auto px-4 py-8 space-y-6" id="page"></main>
+  <div id="app-footer"></div>
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/lockers-pack.js"></script>
+  <script src="js/baltiq.js"></script>
+  <script>
+    Baltiq.injectChrome("profile");
+
+    const sellerParam = new URLSearchParams(location.search).get("seller");
+    const me = Baltiq.getUser();
+    const isPublic = sellerParam && sellerParam !== me.name;
+
+    function stars(n) {
+      const full = Math.round(Number(n) || 0);
+      return "★".repeat(Math.min(5, full)) + "☆".repeat(Math.max(0, 5 - Math.min(5, full)));
+    }
+
+    function avatar(name, hue) {
+      const letter = Baltiq.escapeHtml((name || "?").charAt(0).toUpperCase());
+      return `<div class="w-20 h-20 rounded-3xl flex items-center justify-center text-3xl font-black text-white" style="background:linear-gradient(135deg,hsl(${hue||188} 80% 42%),hsl(230 80% 48%))">${letter}</div>`;
+    }
+
+    function publicView() {
+      const p = Baltiq.sellerPublic(sellerParam);
+      const listings = Baltiq.getProducts().filter((x) => x.seller === p.name);
+      const reviews = Baltiq.reviewsFor(p.name);
+      document.title = p.name + " — BALTIQ";
+      document.getElementById("page").innerHTML = `
+        <a href="index.html" class="text-xs font-bold text-cyan-400">← К каталогу</a>
+        <section class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 grid md:grid-cols-[auto_1fr] gap-6">
+          ${avatar(p.name, 210)}
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h1 class="text-2xl font-black">${Baltiq.escapeHtml(p.name)}</h1>
+              <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${p.verified ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-300 border-rose-500/20"}">${p.verified ? "Smart-ID" : "Не подтверждён"}</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-2">${Baltiq.countryFlag(p.country)} · ${Baltiq.escapeHtml(p.city)} · ${Baltiq.escapeHtml(p.languages)} · с ${Baltiq.formatDate(p.memberSince)}</p>
+            <p class="text-sm text-slate-300 mt-3">${Baltiq.escapeHtml(p.bio)}</p>
+            <div class="flex flex-wrap gap-4 mt-4 text-xs">
+              <span class="text-amber-300 font-black">${p.rating} ${stars(p.rating)}</span>
+              <span class="text-slate-400">${p.deals} сделок</span>
+              <span class="text-slate-400">${listings.length} объявлений</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-3">Контакты скрыты. Сделка только через escrow и пакомат.</p>
+          </div>
+        </section>
+        <section class="space-y-3">
+          <h2 class="text-lg font-black">Товары продавца</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">${listings.length ? listings.map(Baltiq.productCard).join("") : `<p class="text-xs text-slate-500">Нет активных объявлений.</p>`}</div>
+        </section>
+        <section class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-3">
+          <h2 class="text-lg font-black">Отзывы</h2>
+          ${reviews.length ? reviews.map((r) => `
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs">
+              <div class="flex justify-between"><span class="font-bold">${Baltiq.escapeHtml(r.from)}</span><span class="text-amber-300">${stars(r.rating)}</span></div>
+              <p class="text-slate-300 mt-2">${Baltiq.escapeHtml(r.text)}</p>
+              <p class="text-slate-500 mt-1">${Baltiq.formatDate(r.at)}</p>
+            </div>`).join("") : `<p class="text-xs text-slate-500">Отзывов пока нет.</p>`}
+        </section>`;
+    }
+
+    function ownView() {
+      const u = Baltiq.getUser();
+      const listings = Baltiq.getProducts().filter((x) => x.seller === u.name);
+      const orders = Baltiq.getOrders();
+      const reviews = Baltiq.reviewsFor(u.name);
+      const wallet = Baltiq.getWallet();
+      const favIds = Baltiq.getFavorites();
+      const favs = Baltiq.getProducts().filter((p) => favIds.includes(p.id));
+      const rating = Baltiq.avgRating(u.name);
+
+      document.getElementById("page").innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <section class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6">
+            <div class="flex items-center gap-4">
+              ${avatar(u.name, u.avatarHue)}
+              <div>
+                <h1 class="text-xl font-black">${Baltiq.escapeHtml(u.name)}</h1>
+                <div class="inline-flex items-center gap-1 mt-2 px-2.5 py-0.5 text-[10px] font-extrabold rounded-full border ${u.verified ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-300 border-rose-500/20"}">
+                  ${u.verified ? "Smart-ID подтверждён" : "Нужен Smart-ID"}
+                </div>
+                <p class="text-[11px] text-slate-500 mt-2">${Baltiq.countryFlag(u.country)} · ${Baltiq.escapeHtml(u.city)}</p>
+              </div>
+            </div>
+            <p class="text-xs text-slate-300 mt-4">${Baltiq.escapeHtml(u.bio)}</p>
+            <div class="mt-4 grid grid-cols-2 gap-3 text-xs">
+              <div class="bg-slate-950 rounded-2xl p-3 border border-slate-800"><span class="text-slate-500 block">Рейтинг</span><span class="font-black text-amber-300">${rating} ${stars(rating)}</span></div>
+              <div class="bg-slate-950 rounded-2xl p-3 border border-slate-800"><span class="text-slate-500 block">На платформе</span><span class="font-bold">${Baltiq.formatDate(u.memberSince)}</span></div>
+            </div>
+            ${u.verified ? "" : `<a href="verify.html" class="mt-4 inline-flex bg-emerald-500 text-slate-900 text-xs font-bold px-4 py-2 rounded-xl">Подтвердить Smart-ID</a>`}
+          </section>
+
+          <section class="bg-gradient-to-br from-slate-900 to-amber-950/30 border border-amber-500/20 rounded-3xl p-6">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-amber-400 uppercase">Кошелёк</span>
+              <span class="text-[10px] bg-amber-500/10 text-amber-300 font-extrabold px-2.5 py-0.5 rounded-full border border-amber-500/20">1 € = 1 Pts</span>
+            </div>
+            <div class="mt-4 flex items-end gap-3">
+              <div><span class="text-4xl font-black text-amber-300">${u.points}</span> <span class="text-lg font-bold text-amber-400/80">Pts</span></div>
+              <div class="text-slate-400 text-sm mb-1">= ${u.points} €</div>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-2">Продали вещь за евро — получили столько же баллов. Курс всегда 1 к 1.</p>
+            <div class="mt-5 grid grid-cols-2 gap-2">
+              <button data-top="50" class="topup bg-slate-800 text-amber-200 border border-amber-500/30 text-xs font-bold py-2.5 rounded-xl">+50 € / Pts</button>
+              <button data-top="100" class="topup bg-amber-500 text-slate-950 text-xs font-bold py-2.5 rounded-xl">+100 € / Pts</button>
+              <button data-top="250" class="topup bg-slate-800 text-amber-200 border border-amber-500/30 text-xs font-bold py-2.5 rounded-xl">+250 € / Pts</button>
+              <button data-top="500" class="topup bg-slate-800 text-amber-200 border border-amber-500/30 text-xs font-bold py-2.5 rounded-xl">+500 € / Pts</button>
+            </div>
+          </section>
+
+          <section class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 text-xs space-y-3">
+            <span class="text-slate-400 font-bold uppercase tracking-wider">Защита сделки</span>
+            <p class="text-slate-300">Только Smart-ID, escrow BALTIQ и пакоматы Omniva, DPD, Venipak, LP Express.</p>
+            <p class="text-slate-500">Телефон и IBAN скрыты. Прямой перевод запрещён.</p>
+            <p class="text-slate-400">Языки: ${Baltiq.escapeHtml(u.languages)} · пакомат: ${Baltiq.escapeHtml(u.lockerCity)}</p>
+          </section>
+        </div>
+
+        <div class="flex flex-wrap gap-2" id="tabs">
+          ${[["edit","Данные"],["orders","Сделки"],["listings","Объявления"],["favs","Избранное"],["wallet","История Pts"],["reviews","Отзывы"]].map(([id,label],i) =>
+            `<button data-tab="${id}" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold ${i===0 ? "bg-cyan-500 text-slate-900" : "bg-slate-800 text-slate-300 border border-slate-700"}">${label}</button>`
+          ).join("")}
+        </div>
+
+        <section id="tab-edit" class="tab-panel bg-slate-900/80 border border-slate-800 rounded-3xl p-6">
+          <h2 class="text-lg font-black mb-4">Личные данные</h2>
+          <form id="editForm" class="grid sm:grid-cols-2 gap-4 text-xs">
+            <label class="font-bold">Имя
+              <input name="name" value="${Baltiq.escapeHtml(u.name)}" readonly class="mt-1 w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-300">
+              <p class="text-xs text-slate-500 mt-1">${Baltiq.t("nameFromId")}</p>
+            </label>
+            <label class="font-bold">Email
+              <input name="email" type="email" value="${Baltiq.escapeHtml(u.email)}" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm">
+            </label>
+            <label class="font-bold">Телефон (скрыт от других)
+              <input name="phone" value="${Baltiq.escapeHtml(u.phone)}" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm">
+            </label>
+            <label class="font-bold">Языки
+              <input name="languages" value="${Baltiq.escapeHtml(u.languages)}" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm">
+            </label>
+            <label class="font-bold">Страна
+              <select name="country" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm">
+                <option value="LV" ${u.country==="LV"?"selected":""}>Латвия</option>
+                <option value="LT" ${u.country==="LT"?"selected":""}>Литва</option>
+                <option value="EE" ${u.country==="EE"?"selected":""}>Эстония</option>
+              </select>
+            </label>
+            <label class="font-bold">Город / пакомат
+              <input name="city" value="${Baltiq.escapeHtml(u.city)}" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm">
+            </label>
+            <label class="font-bold">Любимый перевозчик
+              <select name="preferredCarrier" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm">
+                ${Baltiq.CARRIERS.map((c) => `<option value="${c.id}" ${u.preferredCarrier===c.id?"selected":""}>${c.name}</option>`).join("")}
+              </select>
+            </label>
+            <label class="font-bold sm:col-span-2">О себе
+              <textarea name="bio" rows="3" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm">${Baltiq.escapeHtml(u.bio)}</textarea>
+            </label>
+            <button class="sm:col-span-2 bg-cyan-500 text-slate-900 font-bold py-3 rounded-xl text-sm">Сохранить профиль</button>
+          </form>
+        </section>
+
+        <section id="tab-orders" class="tab-panel hidden bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-3">
+          <h2 class="text-lg font-black">Мои сделки</h2>
+          ${orders.length ? orders.map((o) => `
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <p class="font-bold text-white">${Baltiq.escapeHtml(o.title || o.description || "")}</p>
+                <p class="text-slate-400 mt-1">${Baltiq.escapeHtml(o.carrier)} · ${Baltiq.escapeHtml(o.city)} · ${Baltiq.escapeHtml(o.track)}</p>
+                <p class="text-emerald-400 font-bold mt-1">${Baltiq.orderStatusLabel(o.status)}</p>
+              </div>
+              <div class="text-right space-y-2">
+                <p class="font-black text-amber-300">${o.amount} ${o.pay === "pts" ? "Pts" : "€"} <span class="text-slate-500 font-bold">= ${o.amount} ${o.pay === "pts" ? "€" : "Pts"}</span></p>
+                ${o.status === "escrow" ? `<button data-ship="${o.id}" class="ship bg-slate-800 border border-slate-600 px-3 py-1.5 rounded-lg font-bold">Отметить отправку</button>` : ""}
+                ${o.status === "shipped" ? `<button data-recv="${o.id}" class="recv bg-emerald-500 text-slate-900 px-3 py-1.5 rounded-lg font-bold">Забрал из пакомата</button>` : ""}
+              </div>
+            </div>`).join("") : `<p class="text-xs text-slate-500">Сделок ещё нет — купите товар в каталоге.</p>`}
+        </section>
+
+        <section id="tab-listings" class="tab-panel hidden bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-3">
+          <div class="flex justify-between items-center">
+            <h2 class="text-lg font-black">Мои объявления</h2>
+            <a href="sell.html" class="text-xs font-bold text-cyan-400">+ Новое</a>
+          </div>
+          ${listings.length ? listings.map((p) => `
+            <div class="flex items-center justify-between gap-3 bg-slate-950 border border-slate-800 rounded-2xl p-3 text-xs">
+              <a href="product.html?id=${p.id}" class="font-bold hover:text-cyan-400">${Baltiq.escapeHtml(Baltiq.adText(p))}</a>
+              <div class="flex items-center gap-3">
+                <span class="text-amber-300 font-black">${p.price_eur} € = ${p.price_points} Pts</span>
+                <button data-del="${p.id}" class="del text-rose-400 font-bold">Снять</button>
+              </div>
+            </div>`).join("") : `<p class="text-xs text-slate-500">Пока нет своих объявлений.</p>`}
+        </section>
+
+        <section id="tab-favs" class="tab-panel hidden space-y-3">
+          <h2 class="text-lg font-black">Избранное</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">${favs.length ? favs.map(Baltiq.productCard).join("") : `<p class="text-xs text-slate-500">Пусто. Добавьте товары сердцем на карточке.</p>`}</div>
+        </section>
+
+        <section id="tab-wallet" class="tab-panel hidden bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-3">
+          <h2 class="text-lg font-black">История баллов</h2>
+          ${wallet.length ? wallet.map((t) => `
+            <div class="flex justify-between text-xs bg-slate-950 border border-slate-800 rounded-2xl p-3">
+              <div>
+                <p class="font-bold">${Baltiq.escapeHtml(t.note || t.type)}</p>
+                <p class="text-slate-500">${Baltiq.formatDate(t.at)}</p>
+              </div>
+              <p class="font-black ${t.amount >= 0 ? "text-emerald-400" : "text-rose-300"}">${t.amount >= 0 ? "+" : ""}${t.amount} Pts</p>
+            </div>`).join("") : `<p class="text-xs text-slate-500">Пока нет операций.</p>`}
+        </section>
+
+        <section id="tab-reviews" class="tab-panel hidden bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-3">
+          <h2 class="text-lg font-black">Отзывы обо мне</h2>
+          ${reviews.length ? reviews.map((r) => `
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs">
+              <div class="flex justify-between"><span class="font-bold">${Baltiq.escapeHtml(r.from)}</span><span class="text-amber-300">${stars(r.rating)}</span></div>
+              <p class="text-slate-300 mt-2">${Baltiq.escapeHtml(r.text)}</p>
+            </div>`).join("") : `<p class="text-xs text-slate-500">После завершённых сделок здесь появятся отзывы.</p>`}
+        </section>
+      `;
+
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.onclick = () => {
+          document.querySelectorAll(".tab-btn").forEach((b) => {
+            b.className = "tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700";
+          });
+          btn.className = "tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-slate-900";
+          document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
+          document.getElementById("tab-" + btn.dataset.tab).classList.remove("hidden");
+        };
+      });
+
+      document.querySelectorAll(".topup").forEach((btn) => {
+        btn.onclick = () => {
+          const amount = Number(btn.dataset.top);
+          const next = Baltiq.setUser({ points: Baltiq.getUser().points + amount });
+          Baltiq.addWalletTx({ type: "topup", amount, note: "Демо-пополнение " + amount + " € = " + amount + " Pts" });
+          Baltiq.injectChrome("profile");
+          ownView();
+          document.querySelector('[data-tab="wallet"]').click();
+          void next;
+        };
+      });
+
+      document.getElementById("editForm").onsubmit = (e) => {
+        e.preventDefault();
+        const f = e.target;
+        Baltiq.setUser({
+          name: Baltiq.getUser().verified ? Baltiq.getUser().name : (f.name.value.trim() || "Гость"),
+          email: f.email.value.trim(),
+          phone: f.phone.value.trim(),
+          languages: f.languages.value.trim(),
+          country: f.country.value,
+          city: f.city.value.trim(),
+          lockerCity: f.city.value.trim(),
+          preferredCarrier: f.preferredCarrier.value,
+          bio: f.bio.value.trim(),
+        });
+        Baltiq.injectChrome("profile");
+        ownView();
+      };
+
+      document.querySelectorAll(".del").forEach((btn) => {
+        btn.onclick = () => {
+          Baltiq.setProducts(Baltiq.getProducts().filter((p) => p.id !== btn.dataset.del));
+          ownView();
+          document.querySelector('[data-tab="listings"]').click();
+        };
+      });
+
+      document.querySelectorAll(".ship").forEach((btn) => {
+        btn.onclick = () => {
+          Baltiq.updateOrder(btn.dataset.ship, { status: "shipped" });
+          ownView();
+          document.querySelector('[data-tab="orders"]').click();
+        };
+      });
+
+      document.querySelectorAll(".recv").forEach((btn) => {
+        btn.onclick = () => {
+          const order = Baltiq.getOrders().find((o) => o.id === btn.dataset.recv);
+          Baltiq.updateOrder(btn.dataset.recv, { status: "received" });
+          if (order && order.pay === "eur") {
+            const pts = Baltiq.eurToPts(order.amount);
+            Baltiq.setUser({ points: Baltiq.getUser().points + pts });
+            Baltiq.addWalletTx({ type: "sale", amount: pts, note: "Конвертация escrow " + order.amount + " € → " + pts + " Pts" });
+          }
+          Baltiq.addReview({
+            id: "r" + Date.now(),
+            seller: order ? order.sellerName || "продавец" : "продавец",
+            from: Baltiq.getUser().name,
+            rating: 5,
+            text: "Получил из пакомата. Сделка через BALTIQ escrow.",
+            at: new Date().toISOString(),
+          });
+          Baltiq.injectChrome("profile");
+          ownView();
+          document.querySelector('[data-tab="orders"]').click();
+        };
+      });
+    }
+
+    if (isPublic) publicView();
+    else ownView();
+  </script>
+</body>
+</html>

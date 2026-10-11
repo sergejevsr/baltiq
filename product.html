@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BALTIQ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+  <div id="app-header"></div>
+  <main id="content" class="max-w-7xl mx-auto px-4 py-8"></main>
+  <div id="app-footer"></div>
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/lockers-pack.js"></script>
+  <script src="js/baltiq.js"></script>
+  <script>
+    Baltiq.injectChrome("catalog");
+    const item = Baltiq.getProducts().find((p) => p.id === new URLSearchParams(location.search).get("id"));
+    if (!item) {
+      document.getElementById("content").innerHTML = `<p class="text-slate-400 text-sm">${Baltiq.t("empty")}</p>`;
+    } else {
+      document.title = Baltiq.adText(item).slice(0, 60) + " — BALTIQ";
+      const gallery = (item.images && item.images.length ? item.images : [item.image]).filter(Boolean);
+      const specEntries = Object.entries(item.specs || {}).filter(([, v]) => v);
+      const yt = Baltiq.youtubeEmbed(item.youtube);
+      const me = Baltiq.getUser();
+      const specHtml = specEntries.map(([k, v]) =>
+        `<div><span class="text-slate-400 block">${Baltiq.t("field." + k)}</span><span class="font-bold">${Baltiq.escapeHtml(Baltiq.optLabel(v))}</span></div>`
+      ).join("");
+
+      document.getElementById("content").innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 space-y-6">
+            <div class="bg-slate-800 border border-slate-700/60 rounded-3xl overflow-hidden h-96 relative">
+              <img id="heroImg" src="${Baltiq.escapeHtml(gallery[0] || "")}" class="w-full h-full object-cover" alt="">
+              <span class="absolute top-4 right-4 bg-slate-900/90 px-3 py-1 rounded-full text-xs font-extrabold border border-slate-700">${Baltiq.countryFlag(item.country)} · ${Baltiq.escapeHtml(item.city)}</span>
+            </div>
+            ${yt ? `<div class="rounded-3xl overflow-hidden border border-slate-700 aspect-video"><iframe class="w-full h-full" src="${yt}" allowfullscreen></iframe></div>` : ""}
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-3xl p-6 space-y-4">
+              <div class="text-xs font-bold text-cyan-400">${Baltiq.t("cat." + item.category)}${item.subcategory ? " · " + Baltiq.subLabel(item.subcategory) : ""}</div>
+              <p class="text-slate-100 text-xl leading-relaxed">${Baltiq.escapeHtml(Baltiq.adText(item))}</p>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">${specHtml}</div>
+            </div>
+          </div>
+          <div class="space-y-5">
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-3xl p-6 space-y-4">
+              <div class="text-3xl font-black">${item.price_eur} € = ${item.price_points} Pts</div>
+              <p class="text-base text-slate-400">${Baltiq.t("commissionLine")}</p>
+                <label class="block text-base font-bold">${Baltiq.t("buyerCountry")}
+                  <select id="destCountry" class="mt-2 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-base font-bold">
+                    <option value="LV">${Baltiq.t("lv")}</option>
+                    <option value="LT">${Baltiq.t("lt")}</option>
+                    <option value="EE">${Baltiq.t("ee")}</option>
+                  </select>
+                </label>
+                <label class="block text-base font-bold">${Baltiq.t("pickupCarrier")}
+                  <select id="carrier" class="mt-2 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-base font-bold"></select>
+                </label>
+                <label class="block text-base font-bold">${Baltiq.t("pickupCity")}
+                  <select id="city" class="mt-2 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-base font-bold"></select>
+                </label>
+                <label class="block text-base font-bold">${Baltiq.t("pickupLocker")}
+                  <select id="locker" class="mt-2 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-base font-bold"></select>
+                </label>
+                <p id="lockerCount" class="text-sm text-slate-400"></p>
+              <button id="buyEur" class="w-full bg-cyan-500 text-slate-900 font-bold py-4 rounded-xl text-lg">${Baltiq.t("buyEur")} · ${item.price_eur} €</button>
+              <button id="buyPts" class="w-full bg-amber-500/10 text-amber-300 font-bold py-4 rounded-xl text-lg border border-amber-500/30">${Baltiq.t("buyPts")} · ${item.price_points} Pts</button>
+              <a class="block text-center text-base font-bold text-cyan-400" href="chat.html?with=${encodeURIComponent(item.seller)}&product=${encodeURIComponent(item.id)}">${Baltiq.t("sendMsg")}</a>
+            </div>
+            <a href="profile.html?seller=${encodeURIComponent(item.seller)}" class="block bg-slate-800/60 border border-slate-700 rounded-3xl p-5">
+              <p class="font-bold">${Baltiq.escapeHtml(item.seller)}</p>
+              <p class="text-[11px] text-emerald-400">Smart-ID</p>
+            </a>
+          </div>
+        </div>`;
+
+      function fillPickup() {
+        const dest = document.getElementById("destCountry").value;
+        const inCountry = Baltiq.lockersFor("", dest);
+        const carriers = [...new Set(inCountry.map((l) => l.carrier))];
+        const carrierSel = document.getElementById("carrier");
+        const keep = carrierSel.value;
+        carrierSel.innerHTML = carriers.map((id) => {
+          const c = Baltiq.CARRIERS.find((x) => x.id === id);
+          return `<option value="${id}">${c ? c.name : id}</option>`;
+        }).join("");
+        if (carriers.includes(keep)) carrierSel.value = keep;
+        const carrier = carrierSel.value;
+        const cities = Baltiq.lockerCities(dest, carrier);
+        const citySel = document.getElementById("city");
+        const keepCity = citySel.value;
+        citySel.innerHTML = cities.map((c) => `<option value="${c}">${c}</option>`).join("");
+        if (cities.includes(keepCity)) citySel.value = keepCity;
+        const city = citySel.value;
+        const lockers = Baltiq.lockersFor(carrier, dest).filter((l) => l.city === city);
+        document.getElementById("locker").innerHTML = lockers.map((l) =>
+          `<option value="${l.id}">${l.name} — ${l.address}</option>`
+        ).join("");
+        document.getElementById("lockerCount").textContent = dest + " · " + (Baltiq.CARRIERS.find((c) => c.id === carrier) || {}).name + " · " + city + " · " + lockers.length;
+      }
+
+      document.getElementById("destCountry").value = me.country || "LV";
+      document.getElementById("destCountry").onchange = fillPickup;
+      document.getElementById("carrier").onchange = fillPickup;
+      document.getElementById("city").onchange = fillPickup;
+      fillPickup();
+
+      function go(pay) {
+        if (!Baltiq.requireVerified(Baltiq.t("buyEur"))) return;
+        const q = new URLSearchParams({ id: item.id, pay });
+        q.set("carrier", document.getElementById("carrier").value);
+        q.set("locker", document.getElementById("locker").value);
+        q.set("dest", document.getElementById("destCountry").value);
+        location.href = "checkout.html?" + q.toString();
+      }
+      document.getElementById("buyEur").onclick = () => go("eur");
+      document.getElementById("buyPts").onclick = () => go("pts");
+    }
+  </script>
+</body>
+</html>

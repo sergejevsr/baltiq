@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BALTIQ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+  <div id="app-header"></div>
+  <main id="content" class="max-w-xl mx-auto px-4 py-10"></main>
+  <div id="app-footer"></div>
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/lockers-pack.js"></script>
+  <script src="js/baltiq.js"></script>
+  <script>
+    Baltiq.injectChrome("catalog");
+    if (!Baltiq.getUser().verified) location.href = "login.html";
+    const params = new URLSearchParams(location.search);
+    const item = Baltiq.getProducts().find((p) => p.id === params.get("id"));
+    const payKind = params.get("pay") === "pts" ? "pts" : "eur";
+    const carrier = Baltiq.CARRIERS.find((c) => c.id === params.get("carrier")) || Baltiq.CARRIERS[0];
+    const locker = Baltiq.allLockers().find((l) => l.id === params.get("locker"));
+    const fee = Baltiq.COMMISSION_EUR;
+    const user = Baltiq.getUser();
+    const box = document.getElementById("content");
+    if (!item) { box.innerHTML = Baltiq.t("empty"); }
+    else {
+      const goods = payKind === "pts" ? item.price_points : item.price_eur;
+      const ship = payKind === "pts" ? Math.round(carrier.price) : carrier.price;
+      const total = +(goods + ship + fee).toFixed(2);
+      const pays = Baltiq.PAYMENTS.filter((p) => payKind === "pts" ? p.id === "pts" : p.id !== "pts");
+      box.innerHTML = `
+        <div class="bg-slate-800/70 border border-slate-700 rounded-3xl p-6 space-y-4">
+          <h1 class="text-xl font-black">${Baltiq.t("checkoutTitle")}</h1>
+          <p class="text-sm">${Baltiq.escapeHtml(Baltiq.adText(item))}</p>
+          <ul class="text-xs text-slate-400 space-y-1">
+            <li>${locker ? locker.country + " · " + locker.city + " · " + locker.name + " · " + locker.address : Baltiq.t("pickupLocker")}</li>
+            <li>${Baltiq.t("fee")}: ${fee} €</li>
+            <li class="text-amber-300 font-black">${total} ${payKind === "pts" ? "Pts" : "€"}</li>
+          </ul>
+          <p class="text-xs font-bold">${Baltiq.t("payTitle")}</p>
+          <div class="grid gap-2">${pays.map((p) =>
+            `<label class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold"><input type="radio" name="paym" value="${p.id}" ${p.id===pays[0].id?"checked":""}> ${p.name}</label>`
+          ).join("")}</div>
+          <button id="payBtn" class="w-full bg-cyan-500 text-slate-900 font-bold py-3 rounded-xl text-sm">${Baltiq.t("freeze")}</button>
+          <div id="done" class="hidden text-sm bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4"></div>
+        </div>`;
+      document.getElementById("payBtn").onclick = () => {
+        const method = document.querySelector('input[name="paym"]:checked').value;
+        if (payKind === "pts" && user.points < total) { location.href = "profile.html"; return; }
+        if (payKind === "pts") {
+          Baltiq.setUser({ points: Baltiq.getUser().points - total });
+          Baltiq.addWalletTx({ type: "purchase", amount: -total, note: item.title });
+        }
+        Baltiq.addOrder({
+          id: "o" + Date.now(),
+          productId: item.id,
+          title: item.title,
+          sellerName: item.seller,
+          pay: payKind,
+          payMethod: method,
+          amount: total,
+          fee,
+          carrier: carrier.name,
+          lockerAddress: locker ? locker.address : "",
+          city: locker ? locker.city : item.city,
+          destCountry: locker ? locker.country : item.country,
+          track: carrier.name.slice(0, 3).toUpperCase() + "-" + Math.floor(1e8 + Math.random() * 9e8),
+          status: "escrow",
+          createdAt: new Date().toISOString(),
+        });
+        document.getElementById("payBtn").classList.add("hidden");
+        document.getElementById("done").classList.remove("hidden");
+        document.getElementById("done").innerHTML = `<p class="font-bold text-emerald-300">${Baltiq.t("frozen")}</p><p>${method}</p><a class="text-cyan-400 font-bold" href="profile.html">${Baltiq.t("navProfile")}</a>`;
+        Baltiq.injectChrome("catalog");
+      };
+    }
+  </script>
+</body>
+</html>

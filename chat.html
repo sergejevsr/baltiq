@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BALTIQ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+  <div id="app-header"></div>
+  <main class="max-w-2xl mx-auto px-4 py-8 space-y-4">
+    <h1 class="text-xl font-black" data-i18n="navChat"></h1>
+    <p id="peer" class="text-xs text-slate-400"></p>
+    <div id="log" class="bg-slate-800/70 border border-slate-700 rounded-3xl p-4 min-h-[240px] space-y-2 text-sm"></div>
+    <form id="form" class="flex gap-2">
+      <input id="text" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm" data-i18n-placeholder="msgPh">
+      <button class="bg-cyan-500 text-slate-900 font-bold px-4 rounded-xl text-sm" data-i18n="sendMsg"></button>
+    </form>
+  </main>
+  <div id="app-footer"></div>
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/lockers-pack.js"></script>
+  <script src="js/baltiq.js"></script>
+  <script>
+    Baltiq.injectChrome("chat");
+    if (!Baltiq.requireVerified(Baltiq.t("sendMsg"))) throw new Error("login");
+    const me = Baltiq.getUser().name;
+    const q = new URLSearchParams(location.search);
+    const withUser = q.get("with") || "";
+    const productId = q.get("product") || "";
+    document.getElementById("peer").textContent = withUser ? withUser + (productId ? " · " + productId : "") : "";
+
+    async function paint() {
+      const all = await Baltiq.loadMessages();
+      const rows = all.filter((m) => !withUser || (m.from === me && m.to === withUser) || (m.from === withUser && m.to === me) || m.from === me || m.to === me);
+      const show = withUser ? rows.filter((m) => (m.from === me && m.to === withUser) || (m.from === withUser && m.to === me)) : rows;
+      document.getElementById("log").innerHTML = show.length ? show.map((m) =>
+        `<p class="${m.from === me ? "text-right text-cyan-300" : "text-slate-200"}"><span class="text-[10px] text-slate-500">${Baltiq.escapeHtml(m.from)}</span><br>${Baltiq.escapeHtml(m.text)}</p>`
+      ).join("") : `<p class="text-xs text-slate-500">—</p>`;
+    }
+    document.getElementById("form").onsubmit = async (e) => {
+      e.preventDefault();
+      const text = document.getElementById("text").value.trim();
+      if (!text) return;
+      await Baltiq.postMessage({ from: me, to: withUser || "support", productId, text });
+      document.getElementById("text").value = "";
+      paint();
+    };
+    paint();
+  </script>
+</body>
+</html>

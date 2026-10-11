@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админка — BALTIQ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div id="app-header"></div>
+  <main class="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <h1 class="text-3xl font-black">Админка</h1>
+    <form id="gate" class="max-w-md space-y-3">
+      <p class="text-slate-400">PIN: 1234</p>
+      <input id="pin" type="password" placeholder="PIN" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3">
+      <button class="bg-cyan-500 text-slate-900 font-bold px-6 py-3 rounded-xl">Войти</button>
+    </form>
+    <div id="panel" class="hidden space-y-5">
+      <div id="tabs" class="flex flex-wrap gap-2"></div>
+      <div id="view"></div>
+    </div>
+  </main>
+  <div id="app-footer"></div>
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/lockers-pack.js"></script>
+  <script src="js/baltiq.js"></script>
+  <script>
+    Baltiq.injectChrome("profile");
+    const KEYS = ["heroTitle","heroText","footer","howTitle","howLead","how1","how2","how3","how4","how5","sellLead","sellFree","loginLead","commissionLine"];
+    let tab = "ads";
+
+    document.getElementById("gate").onsubmit = (e) => {
+      e.preventDefault();
+      if (document.getElementById("pin").value !== (localStorage.getItem("baltiq_admin_pin") || "1234")) return alert("Неверный PIN");
+      sessionStorage.setItem("baltiq_admin", "1");
+      openPanel();
+    };
+
+    function tabs() {
+      const items = [
+        ["ads", "Объявления"],
+        ["orders", "Сделки"],
+        ["msg", "Письма"],
+        ["users", "Люди"],
+        ["lockers", "Пакоматы"],
+        ["texts", "Тексты"],
+        ["set", "Настройки"],
+      ];
+      document.getElementById("tabs").innerHTML = items.map(([id, name]) =>
+        `<button data-t="${id}" class="px-4 py-2 rounded-xl font-bold ${tab===id?"bg-cyan-500 text-slate-900":"bg-slate-800"}">${name}</button>`
+      ).join("");
+      document.querySelectorAll("#tabs button").forEach((b) => b.onclick = () => { tab = b.dataset.t; paint(); });
+    }
+
+    function paint() {
+      tabs();
+      const box = document.getElementById("view");
+      if (tab === "ads") {
+        const list = Baltiq.getProducts();
+        box.innerHTML = `<p class="text-slate-400 mb-3">${list.length} объявлений</p>` + list.map((p) => `
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-2 flex flex-wrap gap-3 justify-between items-center">
+            <div><b>${Baltiq.escapeHtml(Baltiq.adText(p))}</b><div class="text-sm text-slate-400">${p.price_eur} € · ${Baltiq.escapeHtml(p.seller)} · ${Baltiq.subLabel(p.subcategory)}</div></div>
+            <button data-del="${p.id}" class="del bg-rose-500/20 text-rose-300 font-bold px-4 py-2 rounded-xl">Удалить</button>
+          </div>`).join("");
+        box.querySelectorAll(".del").forEach((b) => b.onclick = () => {
+          Baltiq.setProducts(Baltiq.getProducts().filter((x) => x.id !== b.dataset.del));
+          paint();
+        });
+      } else if (tab === "orders") {
+        const list = Baltiq.getOrders();
+        box.innerHTML = list.length ? list.map((o) => `
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-2 space-y-2">
+            <b>${Baltiq.escapeHtml(o.title)}</b>
+            <p class="text-sm">${o.amount} · ${o.status} · ${o.track || ""}</p>
+            <select data-id="${o.id}" class="st bg-slate-800 rounded-xl px-3 py-2">
+              <option value="escrow" ${o.status==="escrow"?"selected":""}>Деньги на сайте</option>
+              <option value="shipped" ${o.status==="shipped"?"selected":""}>В пути</option>
+              <option value="received" ${o.status==="received"?"selected":""}>Получено</option>
+            </select>
+          </div>`).join("") : "<p>Сделок нет</p>";
+        box.querySelectorAll(".st").forEach((s) => s.onchange = () => { Baltiq.updateOrder(s.dataset.id, { status: s.value }); paint(); });
+      } else if (tab === "msg") {
+        Baltiq.loadMessages().then((list) => {
+          box.innerHTML = list.length ? list.slice().reverse().map((m) => `
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-2">
+              <p class="text-sm text-slate-400">${Baltiq.escapeHtml(m.from || "")} → ${Baltiq.escapeHtml(m.to || "")}</p>
+              <p>${Baltiq.escapeHtml(m.text || "")}</p>
+              <button data-id="${m.id}" class="delm text-rose-300 font-bold mt-2">Удалить</button>
+            </div>`).join("") : "<p>Писем нет</p>";
+          box.querySelectorAll(".delm").forEach((b) => b.onclick = async () => {
+            const next = (await Baltiq.loadMessages()).filter((x) => x.id !== b.dataset.id);
+            localStorage.setItem("baltiq_messages", JSON.stringify(next));
+            try { await fetch("/api/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ replace: next }) }); } catch {}
+            paint();
+          });
+        });
+      } else if (tab === "users") {
+        const names = [...new Set(Baltiq.getProducts().map((p) => p.seller))];
+        const me = Baltiq.getUser();
+        box.innerHTML = `<div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-3"><b>${Baltiq.escapeHtml(me.name)}</b> · ${me.verified ? "вошёл" : "гость"} · ${me.points} Pts</div>` +
+          names.map((n) => `<div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-2">${Baltiq.escapeHtml(n)}</div>`).join("");
+      } else if (tab === "lockers") {
+        const extra = JSON.parse(localStorage.getItem("baltiq_lockers_extra") || "[]");
+        const all = Baltiq.allLockers();
+        box.innerHTML = `<p class="mb-3">Всего пакоматов: <b>${all.length}</b>. Свои можно добавить ниже.</p>
+          <form id="addL" class="grid sm:grid-cols-2 gap-3 bg-slate-900 p-4 rounded-2xl mb-4">
+            <select name="carrier" class="bg-slate-800 rounded-xl px-3 py-2">${Baltiq.CARRIERS.map((c)=>`<option value="${c.id}">${c.name}</option>`).join("")}</select>
+            <select name="country" class="bg-slate-800 rounded-xl px-3 py-2"><option>LV</option><option>LT</option><option>EE</option></select>
+            <input name="city" placeholder="Город" required class="bg-slate-800 rounded-xl px-3 py-2">
+            <input name="name" placeholder="Название" required class="bg-slate-800 rounded-xl px-3 py-2">
+            <input name="address" placeholder="Адрес" required class="sm:col-span-2 bg-slate-800 rounded-xl px-3 py-2">
+            <button class="bg-cyan-500 text-slate-900 font-bold rounded-xl py-2">Добавить</button>
+          </form>
+          ${extra.map((l) => `<div class="flex justify-between bg-slate-900 rounded-xl p-3 mb-1"><span>${l.country} · ${l.city} · ${l.name}</span><button data-id="${l.id}" class="dell text-rose-300">Удалить</button></div>`).join("")}`;
+        document.getElementById("addL").onsubmit = (e) => {
+          e.preventDefault();
+          const f = e.target;
+          extra.push({ id: "adm-" + Date.now(), carrier: f.carrier.value, country: f.country.value, city: f.city.value.trim(), name: f.name.value.trim(), address: f.address.value.trim() });
+          localStorage.setItem("baltiq_lockers_extra", JSON.stringify(extra));
+          paint();
+        };
+        box.querySelectorAll(".dell").forEach((b) => b.onclick = () => {
+          localStorage.setItem("baltiq_lockers_extra", JSON.stringify(extra.filter((x) => x.id !== b.dataset.id)));
+          paint();
+        });
+      } else if (tab === "texts") {
+        const lang = BaltiqI18n.getLang();
+        const overlay = BaltiqI18n.getOverlay ? BaltiqI18n.getOverlay() : JSON.parse(localStorage.getItem("baltiq_i18n_overlay") || "{}");
+        box.innerHTML = `<p class="mb-3">Язык: ${lang}</p>` + KEYS.map((k) => {
+          const cur = (overlay[lang] && overlay[lang][k]) || Baltiq.t(k);
+          return `<label class="block mb-3 font-bold">${k}<textarea data-k="${k}" rows="2" class="mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2">${Baltiq.escapeHtml(cur)}</textarea></label>`;
+        }).join("") + `<button id="saveT" class="bg-emerald-500 text-slate-900 font-bold px-5 py-3 rounded-xl">Сохранить тексты</button>`;
+        document.getElementById("saveT").onclick = async () => {
+          overlay[lang] = overlay[lang] || {};
+          document.querySelectorAll("[data-k]").forEach((el) => { overlay[lang][el.dataset.k] = el.value; });
+          localStorage.setItem("baltiq_i18n_overlay", JSON.stringify(overlay));
+          try { await fetch("/api/texts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(overlay) }); } catch {}
+          location.reload();
+        };
+      } else {
+        const pin = localStorage.getItem("baltiq_admin_pin") || "1234";
+        box.innerHTML = `<form id="setF" class="space-y-4 max-w-md">
+          <label class="block font-bold">PIN админки<input name="pin" value="${Baltiq.escapeHtml(pin)}" class="mt-2 w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3"></label>
+          <p>Комиссия сайта: ${Baltiq.COMMISSION_EUR} €</p>
+          <p>Домены: baltiq.lv · baltiq.lt · baltiq.ee</p>
+          <p>Пакоматов сейчас: ${Baltiq.allLockers().length}</p>
+          <button class="bg-cyan-500 text-slate-900 font-bold px-5 py-3 rounded-xl">Сохранить</button>
+        </form>`;
+        document.getElementById("setF").onsubmit = (e) => {
+          e.preventDefault();
+          localStorage.setItem("baltiq_admin_pin", e.target.pin.value || "1234");
+          alert("Сохранено");
+        };
+      }
+    }
+
+    function openPanel() {
+      document.getElementById("gate").classList.add("hidden");
+      document.getElementById("panel").classList.remove("hidden");
+      paint();
+    }
+    if (sessionStorage.getItem("baltiq_admin") === "1") openPanel();
+  </script>
+</body>
+</html>

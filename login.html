@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BALTIQ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+  <div id="app-header"></div>
+  <main class="max-w-lg mx-auto px-4 py-12">
+    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 space-y-5">
+      <div id="inBox" class="hidden space-y-4">
+        <h1 class="text-2xl font-black">Вы уже вошли</h1>
+        <p id="who" class="text-xl font-bold text-emerald-300"></p>
+        <a href="profile.html" class="block text-center bg-cyan-500 text-slate-900 font-bold py-3 rounded-xl">Моя страница</a>
+        <button id="logout" class="w-full border border-slate-600 font-bold py-3 rounded-xl">Выйти</button>
+      </div>
+      <div id="outBox">
+        <h1 class="text-2xl font-black" data-i18n="loginTitle"></h1>
+        <p class="text-slate-300" data-i18n="loginLead"></p>
+        <label class="block font-bold" id="cLabel"></label>
+        <div id="methods" class="grid gap-2"></div>
+        <form id="form" class="hidden space-y-3">
+          <p id="methodName" class="font-bold"></p>
+          <label class="block font-bold" id="pidWrap">
+            <input id="pid" required minlength="6" class="mt-2 w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3" placeholder="******-*****">
+          </label>
+          <button class="w-full bg-emerald-500 text-slate-900 font-bold py-3 rounded-xl" data-i18n="verifyAsk"></button>
+        </form>
+        <div id="challenge" class="hidden space-y-3">
+          <p data-i18n="verifyMatch"></p>
+          <div id="codeBox" class="text-5xl font-black tracking-[0.3em] text-center py-6 bg-slate-950 rounded-2xl border border-emerald-500/30 text-emerald-300"></div>
+          <button id="ok" class="w-full bg-cyan-500 text-slate-900 font-bold py-4 rounded-xl" data-i18n="verifyOk"></button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div id="app-footer"></div>
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/lockers-pack.js"></script>
+  <script src="js/baltiq.js"></script>
+  <script>
+    Baltiq.injectChrome("login");
+    const user = Baltiq.getUser();
+    if (user.verified) {
+      document.getElementById("inBox").classList.remove("hidden");
+      document.getElementById("outBox").classList.add("hidden");
+      document.getElementById("who").textContent = user.name;
+      document.getElementById("logout").onclick = () => {
+        Baltiq.setUser({ verified: false, loginMethod: "", name: "Гость" });
+        location.href = "index.html";
+      };
+    } else {
+      document.getElementById("cLabel").innerHTML = Baltiq.t("sellCountry") +
+        `<select id="country" class="mt-2 w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3">
+          <option value="LV">${Baltiq.t("lv")}</option>
+          <option value="LT">${Baltiq.t("lt")}</option>
+          <option value="EE">${Baltiq.t("ee")}</option>
+        </select>`;
+      document.getElementById("country").value = user.country || "LV";
+      document.getElementById("pidWrap").insertBefore(document.createTextNode(Baltiq.t("verifyPid")), document.getElementById("pidWrap").firstChild);
+
+      function paintMethods() {
+        const cc = document.getElementById("country").value;
+        document.getElementById("methods").innerHTML = Baltiq.BANKS.filter((b) => b.countries.includes(cc)).map((b) =>
+          `<button type="button" data-id="${b.id}" class="bank w-full text-left bg-slate-900 border border-slate-700 hover:border-cyan-500 rounded-xl px-4 py-4 font-bold">${b.name}</button>`
+        ).join("");
+        document.querySelectorAll(".bank").forEach((btn) => {
+          btn.onclick = () => {
+            document.getElementById("form").classList.remove("hidden");
+            document.getElementById("methodName").textContent = Baltiq.BANKS.find((x) => x.id === btn.dataset.id).name;
+            document.getElementById("form").dataset.method = btn.dataset.id;
+          };
+        });
+      }
+      document.getElementById("country").onchange = paintMethods;
+      paintMethods();
+
+      let pending = {};
+      document.getElementById("form").onsubmit = (e) => {
+        e.preventDefault();
+        const method = e.target.dataset.method || "smartid";
+        const cc = document.getElementById("country").value;
+        const code = String(Math.floor(1000 + Math.random() * 9000));
+        pending = { method, cc, code, pidTail: document.getElementById("pid").value.slice(-4) };
+        document.getElementById("form").classList.add("hidden");
+        document.getElementById("challenge").classList.remove("hidden");
+        document.getElementById("codeBox").textContent = code;
+      };
+      document.getElementById("ok").onclick = () => {
+        const bank = Baltiq.BANKS.find((b) => b.id === pending.method);
+        Baltiq.setUser({
+          verified: true,
+          verifiedAt: new Date().toISOString(),
+          country: pending.cc,
+          loginMethod: bank ? bank.name : "Smart-ID",
+          name: Baltiq.legalName(pending.cc),
+          city: pending.cc === "EE" ? "Tallinn" : pending.cc === "LT" ? "Vilnius" : "Rīga",
+          pidTail: pending.pidTail,
+        });
+        location.href = "profile.html";
+      };
+    }
+  </script>
+</body>
+</html>
