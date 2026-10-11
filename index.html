@@ -3,57 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BALTIQ</title>
+  <meta name="description" content="BALTIQ — маркетплейс Латвии, Литвы и Эстонии. Одежда, электроника, детские товары и многое другое с доставкой в пакомат.">
+  <meta name="theme-color" content="#fafaf9">
+  <title>BALTIQ — маркетплейс Балтии</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    .no-scrollbar { scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen">
+<body class="bg-stone-50 text-stone-900 min-h-screen antialiased">
   <div id="app-header"></div>
 
-  <section class="relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-12 px-4 border-b border-slate-800">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-      <div class="space-y-4 max-w-2xl">
-        <div class="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/10 text-cyan-300 rounded-full text-xs font-semibold border border-cyan-500/20">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span data-i18n="heroBadge"></span>
-        </div>
-        <h1 class="text-3xl sm:text-5xl font-black leading-tight" data-i18n="heroTitle"></h1>
-        <p class="text-slate-200 text-lg max-w-xl leading-relaxed" data-i18n="heroText"></p>
-      </div>
-      <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto text-xs">
-        <div class="bg-slate-800/80 px-4 py-3.5 rounded-2xl border border-slate-700/60 flex items-center gap-3">
-          <i class="fa-solid fa-box text-cyan-400 text-xl"></i>
-          <div>
-            <div class="font-bold text-white" data-i18n="lockersCard"></div>
-            <div class="text-slate-400 text-[10px]" data-i18n="lockersCardSub"></div>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div id="homeView" class="space-y-14 md:space-y-20 py-6 md:py-10">
+      <section class="grid lg:grid-cols-2 rounded-3xl overflow-hidden bg-stone-900 text-white">
+        <div class="p-7 sm:p-10 lg:p-14 flex flex-col justify-center gap-6">
+          <span class="inline-flex w-fit items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 text-amber-300 text-xs font-bold">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" aria-hidden="true"></span>
+            <span data-i18n="heroBadge"></span>
+          </span>
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05] text-balance" data-i18n="heroTitle"></h1>
+          <p class="text-stone-300 text-base sm:text-lg leading-relaxed max-w-lg text-pretty" data-i18n="heroText"></p>
+          <div class="flex flex-wrap gap-3">
+            <a href="#fresh" class="inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-amber-400 text-stone-900 font-extrabold hover:bg-amber-300">
+              <span data-i18n="heroCta"></span><i class="fa-solid fa-arrow-down text-sm" aria-hidden="true"></i>
+            </a>
+            <a href="sell.html" class="inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-white/10 text-white font-bold hover:bg-white/15" data-i18n="heroSell"></a>
           </div>
+          <ul class="grid sm:grid-cols-3 gap-4 pt-6 border-t border-white/10 text-sm">
+            <li class="flex gap-3">
+              <i class="fa-solid fa-box text-amber-400 mt-1" aria-hidden="true"></i>
+              <div><p class="font-bold" data-i18n="lockersCard"></p><p class="text-stone-400 text-xs" data-i18n="lockersCardSub"></p></div>
+            </li>
+            <li class="flex gap-3">
+              <i class="fa-solid fa-fingerprint text-amber-400 mt-1" aria-hidden="true"></i>
+              <div><p class="font-bold" data-i18n="verifiedCard"></p><p class="text-stone-400 text-xs" data-i18n="verifiedCardSub"></p></div>
+            </li>
+            <li class="flex gap-3">
+              <i class="fa-solid fa-shield-halved text-amber-400 mt-1" aria-hidden="true"></i>
+              <div><p class="font-bold" data-i18n="trust1"></p><p class="text-stone-400 text-xs" data-i18n="trust1Sub"></p></div>
+            </li>
+          </ul>
         </div>
-        <div class="bg-slate-800/80 px-4 py-3.5 rounded-2xl border border-slate-700/60 flex items-center gap-3">
-          <i class="fa-solid fa-user-check text-emerald-400 text-xl"></i>
-          <div>
-            <div class="font-bold text-white" data-i18n="verifiedCard"></div>
-            <div class="text-slate-400 text-[10px]" data-i18n="verifiedCardSub"></div>
-          </div>
+        <div class="relative min-h-64 lg:min-h-full">
+          <img src="images/hero.png" alt="" class="absolute inset-0 w-full h-full object-cover">
         </div>
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between pb-6 border-b border-slate-800 gap-4">
-      <div id="catButtons" class="flex items-center gap-2 overflow-x-auto"></div>
-      <div class="flex flex-wrap items-center gap-3">
-        <input id="searchInput" type="search" data-i18n-placeholder="searchPh" class="w-full sm:w-72 pl-3 pr-3 py-3 bg-slate-800/80 border border-slate-700/60 rounded-2xl text-base text-slate-200 placeholder-slate-500 focus:border-cyan-500 focus:outline-none">
-        <select id="countryFilter" class="bg-slate-800 border border-slate-700 text-base font-bold text-slate-200 rounded-xl px-3 py-3"></select>
+      <section aria-labelledby="catsHeading">
+        <h2 id="catsHeading" class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-5" data-i18n="catsTitle"></h2>
+        <div id="catGrid" class="grid grid-cols-4 sm:grid-cols-7 gap-2 sm:gap-3"></div>
+      </section>
+
+      <section aria-labelledby="clothesHeading">
+        <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+          <div>
+            <h2 id="clothesHeading" class="text-2xl sm:text-3xl font-extrabold tracking-tight" data-i18n="clothesTitle"></h2>
+            <p class="text-stone-500 mt-1" data-i18n="clothesLead"></p>
+          </div>
+          <a href="index.html?cat=fashion" data-spa class="inline-flex items-center gap-2 text-sm font-bold text-stone-900 hover:text-amber-700">
+            <span data-i18n="seeAll"></span><i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+          </a>
+        </div>
+        <div id="fashionTiles" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"></div>
+        <div class="mt-6">
+          <h3 class="text-sm font-bold text-stone-500 mb-3" data-i18n="popularClothes"></h3>
+          <div id="fashionChips" class="flex flex-wrap gap-2"></div>
+        </div>
+      </section>
+
+      <section id="fresh" aria-labelledby="freshHeading" class="scroll-mt-36">
+        <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+          <h2 id="freshHeading" class="text-2xl sm:text-3xl font-extrabold tracking-tight" data-i18n="freshTitle"></h2>
+          <a href="index.html?cat=all" data-spa class="inline-flex items-center gap-2 text-sm font-bold text-stone-900 hover:text-amber-700">
+            <span data-i18n="seeAll"></span><i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+          </a>
+        </div>
+        <div id="freshGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5"></div>
+      </section>
+    </div>
+
+    <div id="listView" hidden class="py-6 md:py-8">
+      <nav id="crumbs" aria-label="Breadcrumb" class="text-sm text-stone-500"></nav>
+      <div class="flex flex-wrap items-end justify-between gap-4 mt-3">
+        <div>
+          <h1 id="listTitle" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-balance"></h1>
+          <p id="listCount" class="text-stone-500 mt-1"></p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <label class="sr-only" for="countryFilter" data-i18n="country"></label>
+          <select id="countryFilter" class="h-10 bg-white border border-stone-200 rounded-xl px-3 text-sm font-semibold text-stone-800"></select>
+          <label class="sr-only" for="condFilter" data-i18n="condition"></label>
+          <select id="condFilter" class="h-10 bg-white border border-stone-200 rounded-xl px-3 text-sm font-semibold text-stone-800"></select>
+          <label class="sr-only" for="sortSelect" data-i18n="sortLabel"></label>
+          <select id="sortSelect" class="h-10 bg-white border border-stone-200 rounded-xl px-3 text-sm font-semibold text-stone-800"></select>
+        </div>
+      </div>
+      <div id="subTiles"></div>
+      <div id="subChips"></div>
+      <div class="mt-6 grid lg:grid-cols-[240px_1fr] gap-8">
+        <aside id="sideTree" class="hidden lg:block" aria-label="Sections"></aside>
+        <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 content-start"></div>
       </div>
     </div>
-    <p id="crumb" class="mt-4 text-base text-slate-400"></p>
-    <div id="subGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4"></div>
-    <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8"></div>
   </main>
 
   <div id="app-footer"></div>
@@ -61,122 +118,6 @@
   <script src="js/data.js"></script>
   <script src="js/lockers-pack.js"></script>
   <script src="js/baltiq.js"></script>
-  <script>
-    Baltiq.injectChrome("catalog");
-    document.getElementById("countryFilter").innerHTML = `
-      <option value="all">${Baltiq.t("allBaltics")}</option>
-      <option value="LV">${Baltiq.t("lv")} 🇱🇻</option>
-      <option value="LT">${Baltiq.t("lt")} 🇱🇹</option>
-      <option value="EE">${Baltiq.t("ee")} 🇪🇪</option>`;
-    let currentCategory = "all";
-    let currentGroup = "";
-    let currentLeaf = "";
-
-    function allItems() {
-      return Baltiq.getProducts();
-    }
-
-    function countIn(ids) {
-      const list = allItems();
-      return list.filter((p) => ids.includes(p.subcategory)).length;
-    }
-
-    function renderCats() {
-      const wrap = document.getElementById("catButtons");
-      wrap.innerHTML = Object.entries(Baltiq.getCategories()).map(([id, label]) => {
-        const on = currentCategory === id;
-        return `<button data-cat="${id}" class="cat-btn shrink-0 px-5 py-3 rounded-xl text-base font-bold ${on ? "bg-cyan-500 text-slate-900" : "bg-slate-800 text-slate-300 border border-slate-700/60"}">${label}</button>`;
-      }).join("");
-      wrap.querySelectorAll("button").forEach((btn) => {
-        btn.onclick = () => {
-          currentCategory = btn.dataset.cat;
-          currentGroup = "";
-          currentLeaf = "";
-          renderCats();
-          render();
-        };
-      });
-    }
-
-    function tile(id, label, n) {
-      return `<button data-id="${id}" class="pick text-left bg-slate-800 border border-slate-700 hover:border-cyan-400 rounded-2xl px-5 py-4">
-        <span class="text-lg font-bold block">${label}</span>
-        <span class="text-slate-400 text-sm">${n} шт.</span>
-      </button>`;
-    }
-
-    function render() {
-      const q = document.getElementById("searchInput").value.toLowerCase().trim();
-      const country = document.getElementById("countryFilter").value;
-      const crumb = document.getElementById("crumb");
-      const subGrid = document.getElementById("subGrid");
-      const groups = Baltiq.SUBCATEGORIES[currentCategory] || [];
-      const tree = Baltiq.SUB_TREE || {};
-      const hasGroups = currentCategory !== "all" && groups.length && groups[0] !== "other";
-
-      let path = Baltiq.t("cat." + currentCategory);
-      if (currentGroup) path += " → " + Baltiq.subLabel(currentGroup);
-      if (currentLeaf) path += " → " + Baltiq.subLabel(currentLeaf);
-      crumb.textContent = currentCategory === "all" ? "" : path;
-
-      subGrid.innerHTML = "";
-      let showProducts = true;
-
-      if (hasGroups && !currentGroup) {
-        showProducts = false;
-        subGrid.innerHTML = groups.map((id) => {
-          const kids = tree[id] || [id];
-          return tile(id, Baltiq.subLabel(id), countIn(kids.concat(id)));
-        }).join("");
-        subGrid.querySelectorAll(".pick").forEach((b) => {
-          b.onclick = () => {
-            currentGroup = b.dataset.id;
-            currentLeaf = "";
-            render();
-          };
-        });
-      } else if (currentGroup && tree[currentGroup] && !currentLeaf) {
-        showProducts = false;
-        const kids = tree[currentGroup];
-        subGrid.innerHTML = `<button id="up" class="sm:col-span-2 lg:col-span-3 text-left text-cyan-400 font-bold py-2">${Baltiq.t("back")}</button>` +
-          kids.map((id) => tile(id, Baltiq.subLabel(id), countIn([id]))).join("");
-        document.getElementById("up").onclick = () => { currentGroup = ""; currentLeaf = ""; render(); };
-        subGrid.querySelectorAll(".pick").forEach((b) => {
-          b.onclick = () => { currentLeaf = b.dataset.id; render(); };
-        });
-      } else if (currentLeaf || (currentGroup && !tree[currentGroup])) {
-        subGrid.innerHTML = `<button id="up" class="text-left text-cyan-400 font-bold py-2">${Baltiq.t("back")}</button>`;
-        document.getElementById("up").onclick = () => {
-          if (currentLeaf) currentLeaf = "";
-          else currentGroup = "";
-          render();
-        };
-      }
-
-      const items = allItems().filter((item) => {
-        const catOk = currentCategory === "all" || item.category === currentCategory;
-        const countryOk = country === "all" || item.country === country;
-        const qOk = !q || Baltiq.adText(item).toLowerCase().includes(q) || item.city.toLowerCase().includes(q);
-        let subOk = true;
-        if (currentLeaf) subOk = item.subcategory === currentLeaf;
-        else if (currentGroup) subOk = Baltiq.inSubGroup(item, currentGroup);
-        return catOk && countryOk && qOk && subOk;
-      });
-
-      const grid = document.getElementById("productGrid");
-      if (!showProducts && !q) {
-        grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-lg">${Baltiq.t("pickSection")}</div>`;
-        return;
-      }
-      grid.innerHTML = items.length
-        ? items.map(Baltiq.productCard).join("")
-        : `<div class="col-span-full text-center py-12 text-slate-400 text-lg">${Baltiq.t("empty")}</div>`;
-    }
-
-    document.getElementById("searchInput").oninput = render;
-    document.getElementById("countryFilter").onchange = render;
-    renderCats();
-    render();
-  </script>
+  <script src="js/catalog.js"></script>
 </body>
 </html>

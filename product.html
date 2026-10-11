@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#fafaf9">
   <title>BALTIQ</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen">
+<body class="bg-stone-50 text-stone-900 min-h-screen antialiased">
   <div id="app-header"></div>
-  <main id="content" class="max-w-7xl mx-auto px-4 py-8"></main>
+  <main id="content" class="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8"></main>
   <div id="app-footer"></div>
   <script src="js/i18n.js"></script>
   <script src="js/data.js"></script>
@@ -21,88 +22,180 @@
   <script src="js/baltiq.js"></script>
   <script>
     Baltiq.injectChrome("catalog");
-    const item = Baltiq.getProducts().find((p) => p.id === new URLSearchParams(location.search).get("id"));
+    const B = Baltiq;
+    const esc = B.escapeHtml;
+    const products = B.getProducts();
+    const item = products.find((p) => p.id === new URLSearchParams(location.search).get("id"));
+    const selectCls = "mt-1.5 w-full h-11 bg-white border border-stone-200 rounded-xl px-3 text-sm font-semibold text-stone-900 focus:outline-none focus:ring-4 focus:ring-amber-200/60 focus:border-stone-400";
+
     if (!item) {
-      document.getElementById("content").innerHTML = `<p class="text-slate-400 text-sm">${Baltiq.t("empty")}</p>`;
+      document.getElementById("content").innerHTML = `
+        <div class="text-center py-24">
+          <p class="text-xl font-bold">${B.t("empty")}</p>
+          <a href="index.html" class="mt-4 inline-flex h-11 items-center px-5 rounded-xl bg-stone-900 text-white font-bold">${B.t("home")}</a>
+        </div>`;
     } else {
-      document.title = Baltiq.adText(item).slice(0, 60) + " — BALTIQ";
+      document.title = B.adText(item).slice(0, 60) + " — BALTIQ";
       const gallery = (item.images && item.images.length ? item.images : [item.image]).filter(Boolean);
       const specEntries = Object.entries(item.specs || {}).filter(([, v]) => v);
-      const yt = Baltiq.youtubeEmbed(item.youtube);
-      const me = Baltiq.getUser();
+      if (item.condition) specEntries.unshift(["condition", item.condition]);
+      const yt = B.youtubeEmbed(item.youtube);
+      const me = B.getUser();
+      const seller = B.sellerPublic(item.seller);
+      const group = item.category === "fashion"
+        ? Object.keys(B.SUB_TREE).find((g) => (B.SUB_TREE[g] || []).includes(item.subcategory)) || ""
+        : "";
+      const fav = B.isFavorite(item.id);
+
+      const specLabel = (k) => (k === "condition" ? B.t("condition") : B.t("field." + k));
       const specHtml = specEntries.map(([k, v]) =>
-        `<div><span class="text-slate-400 block">${Baltiq.t("field." + k)}</span><span class="font-bold">${Baltiq.escapeHtml(Baltiq.optLabel(v))}</span></div>`
+        `<div class="flex justify-between gap-4 py-3 border-b border-stone-100 last:border-0">
+          <dt class="text-stone-500">${esc(specLabel(k))}</dt><dd class="font-semibold text-right">${esc(B.optLabel(v))}</dd></div>`
       ).join("");
 
+      const crumbs = [
+        `<a href="index.html" class="hover:text-stone-900">${B.t("home")}</a>`,
+        `<a href="index.html?cat=${item.category}" class="hover:text-stone-900">${B.t("cat." + item.category)}</a>`,
+        group ? `<a href="index.html?cat=${item.category}&group=${group}" class="hover:text-stone-900">${B.subLabel(group)}</a>` : "",
+        item.subcategory ? `<a href="index.html?cat=${item.category}${group ? `&group=${group}&leaf=${item.subcategory}` : `&group=${item.subcategory}`}" class="hover:text-stone-900">${B.subLabel(item.subcategory)}</a>` : "",
+      ].filter(Boolean);
+
+      const similar = products
+        .filter((p) => p.id !== item.id && p.category === item.category)
+        .sort((a, b) => (b.subcategory === item.subcategory) - (a.subcategory === item.subcategory))
+        .slice(0, 4);
+
+      const thumbs = gallery.length > 1
+        ? `<div class="flex gap-2 mt-3 overflow-x-auto">${gallery.map((src, i) =>
+            `<button type="button" data-thumb="${i}" aria-label="${i + 1}" class="shrink-0 w-20 h-24 rounded-xl overflow-hidden border-2 ${i ? "border-transparent" : "border-stone-900"}">
+              <img src="${esc(src)}" alt="" class="w-full h-full object-cover"></button>`).join("")}</div>`
+        : "";
+
       document.getElementById("content").innerHTML = `
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div class="lg:col-span-2 space-y-6">
-            <div class="bg-slate-800 border border-slate-700/60 rounded-3xl overflow-hidden h-96 relative">
-              <img id="heroImg" src="${Baltiq.escapeHtml(gallery[0] || "")}" class="w-full h-full object-cover" alt="">
-              <span class="absolute top-4 right-4 bg-slate-900/90 px-3 py-1 rounded-full text-xs font-extrabold border border-slate-700">${Baltiq.countryFlag(item.country)} · ${Baltiq.escapeHtml(item.city)}</span>
+        <nav aria-label="Breadcrumb" class="text-sm text-stone-500 mb-5">
+          <ol class="flex flex-wrap items-center">${crumbs.map((c, i) => `<li class="flex items-center">${i ? '<i class="fa-solid fa-chevron-right text-[9px] text-stone-300 mx-2" aria-hidden="true"></i>' : ""}${c}</li>`).join("")}</ol>
+        </nav>
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8 lg:gap-12">
+          <div class="space-y-6 min-w-0">
+            <div>
+              <div class="relative rounded-3xl overflow-hidden bg-stone-100 aspect-[4/5] sm:aspect-[4/3]">
+                <img id="heroImg" src="${esc(gallery[0] || "")}" class="w-full h-full object-cover" alt="${esc(B.adText(item).slice(0, 120))}">
+                <div class="absolute top-4 left-4 flex gap-2">
+                  ${item.condition === "new" ? `<span class="px-2.5 py-1 rounded-lg bg-amber-400 text-stone-900 text-xs font-extrabold">${B.optLabel("new")}</span>` : ""}
+                  <span class="px-2.5 py-1 rounded-lg bg-white/90 backdrop-blur text-xs font-bold">${B.countryFlag(item.country)} · ${esc(item.city)}</span>
+                </div>
+              </div>
+              ${thumbs}
             </div>
-            ${yt ? `<div class="rounded-3xl overflow-hidden border border-slate-700 aspect-video"><iframe class="w-full h-full" src="${yt}" allowfullscreen></iframe></div>` : ""}
-            <div class="bg-slate-800/60 border border-slate-700/60 rounded-3xl p-6 space-y-4">
-              <div class="text-xs font-bold text-cyan-400">${Baltiq.t("cat." + item.category)}${item.subcategory ? " · " + Baltiq.subLabel(item.subcategory) : ""}</div>
-              <p class="text-slate-100 text-xl leading-relaxed">${Baltiq.escapeHtml(Baltiq.adText(item))}</p>
-              <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">${specHtml}</div>
-            </div>
+            ${yt ? `<div class="rounded-3xl overflow-hidden aspect-video bg-stone-900"><iframe class="w-full h-full" src="${yt}" title="YouTube" allowfullscreen></iframe></div>` : ""}
+            <section class="rounded-3xl bg-white border border-stone-200 p-6 sm:p-8">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-stone-400 mb-3">${B.t("description")}</h2>
+              <p class="text-lg leading-relaxed text-pretty">${esc(B.adText(item))}</p>
+              ${specHtml ? `<h2 class="text-xs font-bold uppercase tracking-wider text-stone-400 mt-8 mb-1">${B.t("details")}</h2><dl class="text-sm">${specHtml}</dl>` : ""}
+            </section>
           </div>
-          <div class="space-y-5">
-            <div class="bg-slate-800/80 border border-slate-700/60 rounded-3xl p-6 space-y-4">
-              <div class="text-3xl font-black">${item.price_eur} € = ${item.price_points} Pts</div>
-              <p class="text-base text-slate-400">${Baltiq.t("commissionLine")}</p>
-                <label class="block text-base font-bold">${Baltiq.t("buyerCountry")}
-                  <select id="destCountry" class="mt-2 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-base font-bold">
-                    <option value="LV">${Baltiq.t("lv")}</option>
-                    <option value="LT">${Baltiq.t("lt")}</option>
-                    <option value="EE">${Baltiq.t("ee")}</option>
+
+          <aside class="space-y-4 lg:sticky lg:top-36 self-start">
+            <div class="rounded-3xl bg-white border border-stone-200 p-6 space-y-5">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="text-xs font-bold text-amber-700">${B.t("cat." + item.category)}${item.subcategory ? " · " + B.subLabel(item.subcategory) : ""}</p>
+                  <h1 class="text-xl font-bold leading-snug mt-1 line-clamp-3">${esc(B.adText(item))}</h1>
+                </div>
+                <button type="button" data-fav="${esc(item.id)}" aria-pressed="${fav}" aria-label="${esc(B.t("favorite"))}" class="shrink-0 w-11 h-11 rounded-full border border-stone-200 grid place-items-center hover:border-stone-400">
+                  <i class="${fav ? "fa-solid text-rose-500" : "fa-regular text-stone-700"} fa-heart" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="flex items-baseline gap-3">
+                <span class="text-4xl font-extrabold tracking-tight">${item.price_eur} €</span>
+                <span class="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm font-bold">${item.price_points} Pts</span>
+              </div>
+              <p class="text-sm text-stone-500">${B.t("commissionLine")}</p>
+
+              <fieldset class="space-y-3 rounded-2xl bg-stone-50 p-4">
+                <legend class="sr-only">${B.t("delivery")}</legend>
+                <label class="block text-xs font-bold text-stone-600">${B.t("buyerCountry")}
+                  <select id="destCountry" class="${selectCls}">
+                    <option value="LV">${B.t("lv")}</option>
+                    <option value="LT">${B.t("lt")}</option>
+                    <option value="EE">${B.t("ee")}</option>
                   </select>
                 </label>
-                <label class="block text-base font-bold">${Baltiq.t("pickupCarrier")}
-                  <select id="carrier" class="mt-2 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-base font-bold"></select>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block text-xs font-bold text-stone-600">${B.t("pickupCarrier")}
+                    <select id="carrier" class="${selectCls}"></select>
+                  </label>
+                  <label class="block text-xs font-bold text-stone-600">${B.t("pickupCity")}
+                    <select id="city" class="${selectCls}"></select>
+                  </label>
+                </div>
+                <label class="block text-xs font-bold text-stone-600">${B.t("pickupLocker")}
+                  <select id="locker" class="${selectCls}"></select>
                 </label>
-                <label class="block text-base font-bold">${Baltiq.t("pickupCity")}
-                  <select id="city" class="mt-2 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-base font-bold"></select>
-                </label>
-                <label class="block text-base font-bold">${Baltiq.t("pickupLocker")}
-                  <select id="locker" class="mt-2 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-base font-bold"></select>
-                </label>
-                <p id="lockerCount" class="text-sm text-slate-400"></p>
-              <button id="buyEur" class="w-full bg-cyan-500 text-slate-900 font-bold py-4 rounded-xl text-lg">${Baltiq.t("buyEur")} · ${item.price_eur} €</button>
-              <button id="buyPts" class="w-full bg-amber-500/10 text-amber-300 font-bold py-4 rounded-xl text-lg border border-amber-500/30">${Baltiq.t("buyPts")} · ${item.price_points} Pts</button>
-              <a class="block text-center text-base font-bold text-cyan-400" href="chat.html?with=${encodeURIComponent(item.seller)}&product=${encodeURIComponent(item.id)}">${Baltiq.t("sendMsg")}</a>
+                <p id="lockerCount" class="text-xs text-stone-500"><i class="fa-solid fa-box mr-1" aria-hidden="true"></i></p>
+              </fieldset>
+
+              <div class="space-y-2.5">
+                <button id="buyEur" class="w-full h-13 py-3.5 rounded-xl bg-stone-900 text-white font-extrabold hover:bg-stone-700">${B.t("buyEur")} · ${item.price_eur} €</button>
+                <button id="buyPts" class="w-full py-3.5 rounded-xl bg-amber-400 text-stone-900 font-extrabold hover:bg-amber-300">${B.t("buyPts")} · ${item.price_points} Pts</button>
+                <a class="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-stone-200 text-sm font-bold hover:border-stone-400" href="chat.html?with=${encodeURIComponent(item.seller)}&product=${encodeURIComponent(item.id)}">
+                  <i class="fa-regular fa-comment" aria-hidden="true"></i>${B.t("sendMsg")}</a>
+              </div>
+              <p class="flex items-start gap-2 text-xs text-stone-500"><i class="fa-solid fa-shield-halved text-emerald-600 mt-0.5" aria-hidden="true"></i>${B.t("trust1")} — ${B.t("trust1Sub")}</p>
             </div>
-            <a href="profile.html?seller=${encodeURIComponent(item.seller)}" class="block bg-slate-800/60 border border-slate-700 rounded-3xl p-5">
-              <p class="font-bold">${Baltiq.escapeHtml(item.seller)}</p>
-              <p class="text-[11px] text-emerald-400">Smart-ID</p>
+
+            <a href="profile.html?seller=${encodeURIComponent(item.seller)}" class="flex items-center gap-4 rounded-3xl bg-white border border-stone-200 p-5 hover:border-stone-400">
+              <span class="w-12 h-12 rounded-full bg-stone-900 text-amber-400 grid place-items-center text-lg font-black">${esc(item.seller.slice(0, 1))}</span>
+              <span class="flex-1 min-w-0">
+                <span class="block font-bold truncate">${esc(item.seller)}</span>
+                <span class="flex items-center gap-1 text-xs font-semibold text-emerald-700"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>${B.t("verifiedSeller")}</span>
+              </span>
+              <span class="text-right text-xs text-stone-500">
+                <span class="block text-sm font-bold text-stone-900"><i class="fa-solid fa-star text-amber-500 text-xs" aria-hidden="true"></i> ${seller.rating}</span>
+                ${seller.deals} ${B.t("deals")}
+              </span>
             </a>
-          </div>
-        </div>`;
+          </aside>
+        </div>
+
+        ${similar.length ? `<section class="mt-16" aria-labelledby="similarHeading">
+          <h2 id="similarHeading" class="text-2xl font-extrabold tracking-tight mb-5">${B.t("similar")}</h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">${similar.map(B.productCard).join("")}</div>
+        </section>` : ""}`;
+
+      document.querySelectorAll("[data-thumb]").forEach((btn) => {
+        btn.onclick = () => {
+          document.getElementById("heroImg").src = gallery[Number(btn.dataset.thumb)];
+          document.querySelectorAll("[data-thumb]").forEach((b) => b.classList.replace("border-stone-900", "border-transparent"));
+          btn.classList.replace("border-transparent", "border-stone-900");
+        };
+      });
 
       function fillPickup() {
         const dest = document.getElementById("destCountry").value;
-        const inCountry = Baltiq.lockersFor("", dest);
+        const inCountry = B.lockersFor("", dest);
         const carriers = [...new Set(inCountry.map((l) => l.carrier))];
         const carrierSel = document.getElementById("carrier");
         const keep = carrierSel.value;
         carrierSel.innerHTML = carriers.map((id) => {
-          const c = Baltiq.CARRIERS.find((x) => x.id === id);
+          const c = B.CARRIERS.find((x) => x.id === id);
           return `<option value="${id}">${c ? c.name : id}</option>`;
         }).join("");
         if (carriers.includes(keep)) carrierSel.value = keep;
         const carrier = carrierSel.value;
-        const cities = Baltiq.lockerCities(dest, carrier);
+        const cities = B.lockerCities(dest, carrier);
         const citySel = document.getElementById("city");
         const keepCity = citySel.value;
         citySel.innerHTML = cities.map((c) => `<option value="${c}">${c}</option>`).join("");
         if (cities.includes(keepCity)) citySel.value = keepCity;
         const city = citySel.value;
-        const lockers = Baltiq.lockersFor(carrier, dest).filter((l) => l.city === city);
+        const lockers = B.lockersFor(carrier, dest).filter((l) => l.city === city);
         document.getElementById("locker").innerHTML = lockers.map((l) =>
           `<option value="${l.id}">${l.name} — ${l.address}</option>`
         ).join("");
-        document.getElementById("lockerCount").textContent = dest + " · " + (Baltiq.CARRIERS.find((c) => c.id === carrier) || {}).name + " · " + city + " · " + lockers.length;
+        const c = B.CARRIERS.find((x) => x.id === carrier) || {};
+        document.getElementById("lockerCount").innerHTML =
+          `<i class="fa-solid fa-box mr-1" aria-hidden="true"></i>${c.name || ""} · ${city} · ${lockers.length}${c.eta ? " · " + c.eta : ""}`;
       }
 
       document.getElementById("destCountry").value = me.country || "LV";
@@ -112,7 +205,7 @@
       fillPickup();
 
       function go(pay) {
-        if (!Baltiq.requireVerified(Baltiq.t("buyEur"))) return;
+        if (!B.requireVerified(B.t("buyEur"))) return;
         const q = new URLSearchParams({ id: item.id, pay });
         q.set("carrier", document.getElementById("carrier").value);
         q.set("locker", document.getElementById("locker").value);

@@ -777,50 +777,131 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
+const CATEGORY_ICONS = {
+  all: "fa-border-all",
+  auto: "fa-car-side",
+  tech: "fa-mobile-screen-button",
+  home: "fa-couch",
+  fashion: "fa-shirt",
+  kids: "fa-baby-carriage",
+  hobby: "fa-person-biking",
+  other: "fa-box-open",
+};
+
+function categoryIcon(id) {
+  return CATEGORY_ICONS[id] || "fa-tag";
+}
+
 function headerHTML(active) {
   const user = getUser();
   const lang = window.BaltiqI18n ? window.BaltiqI18n.getLang() : "ru";
   const order = window.BaltiqI18n ? window.BaltiqI18n.langOrder() : ["ru", "lv", "lt", "et", "en"];
+  const params = new URLSearchParams(location.search);
+  const onIndex = /(^|\/)(index\.html)?$/.test(location.pathname);
+  const activeCat = onIndex ? params.get("cat") || "" : "";
+  const q = onIndex ? params.get("q") || "" : "";
+
   const account = user.verified
-    ? `<span class="text-base font-bold text-emerald-300">${escapeHtml(user.name)}</span>
-       <button type="button" id="logoutBtn" class="text-base font-bold px-4 py-2 rounded-xl border border-slate-600">${t("navLogout")}</button>`
-    : `<a href="login.html" class="text-base font-bold px-5 py-2.5 rounded-xl bg-white text-slate-900">${t("navLogin")}</a>`;
+    ? `<a href="profile.html" class="hidden sm:flex items-center gap-2 text-sm font-bold text-stone-800 hover:text-stone-950">
+         <span class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 grid place-items-center text-xs font-black">${escapeHtml(String(user.name || "?").slice(0, 1))}</span>
+         <span class="max-w-[8rem] truncate">${escapeHtml(user.name)}</span>
+       </a>
+       <button type="button" id="logoutBtn" class="text-sm font-bold text-stone-500 hover:text-stone-900 px-2 py-2" aria-label="${t("navLogout")}"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i></button>`
+    : `<a href="login.html" class="text-sm font-bold px-3 sm:px-4 py-2.5 rounded-xl text-stone-800 hover:bg-stone-100">${t("navLogin")}</a>`;
 
   const nav = (href, label, key) =>
-    `<a href="${href}" class="text-lg font-bold ${active === key ? "text-cyan-300" : "text-slate-200 hover:text-white"}">${label}</a>`;
+    `<a href="${href}" class="text-sm font-semibold ${active === key ? "text-stone-950" : "text-stone-500 hover:text-stone-900"}">${label}</a>`;
 
   const langOptions = order
-    .map((code) => `<option value="${code}" ${code === lang ? "selected" : ""}>${window.BaltiqI18n.LANG_META[code].label}</option>`)
+    .map((code) => `<option value="${code}" ${code === lang ? "selected" : ""}>${code.toUpperCase()}</option>`)
+    .join("");
+
+  const pill = "shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-semibold text-stone-600 hover:bg-stone-100 hover:text-stone-900 aria-[current=page]:bg-stone-900 aria-[current=page]:text-white";
+  const catLinks = CATEGORY_IDS.filter((id) => id !== "all")
+    .map((id) => `<a href="index.html?cat=${id}" data-spa data-nav-cat="${id}" ${activeCat === id ? 'aria-current="page"' : ""} class="${pill}">
+        <i class="fa-solid ${categoryIcon(id)} text-xs opacity-70" aria-hidden="true"></i>${t("cat." + id)}</a>`)
     .join("");
 
   return `
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
-        <a href="index.html" class="flex items-center gap-3 shrink-0">
-          <div class="w-12 h-12 bg-cyan-500 text-slate-900 rounded-xl flex items-center justify-center text-2xl font-black">B</div>
-          <span class="text-3xl font-black text-white">BALTIQ</span>
-        </a>
-        <nav class="hidden md:flex items-center gap-8">
-          ${nav("index.html", t("navCatalog"), "catalog")}
-          ${nav("how.html", t("navHow"), "how")}
-          ${nav("profile.html", t("navProfile"), "profile")}
-        </nav>
-        <div class="flex items-center gap-3">
-          <select id="langSelect" class="bg-slate-800 border border-slate-700 text-base font-bold text-slate-200 rounded-xl px-3 py-2">${langOptions}</select>
-          ${account}
-          <a href="profile.html" class="hidden sm:block text-base font-bold text-amber-300">${user.points} Pts</a>
-          <a href="sell.html" class="bg-cyan-500 text-slate-900 text-base font-bold px-5 py-2.5 rounded-xl">${t("navSell")}</a>
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-stone-200 text-stone-900">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-3 py-3">
+          <a href="index.html" data-spa data-nav-cat="" class="flex items-center gap-2.5 shrink-0" aria-label="BALTIQ">
+            <span class="w-9 h-9 rounded-xl bg-stone-900 text-amber-400 grid place-items-center text-lg font-black">B</span>
+            <span class="text-xl sm:text-2xl font-black tracking-tight">BALTIQ</span>
+          </a>
+          <form id="headerSearch" action="index.html" method="get" role="search" class="order-last w-full md:order-none md:w-auto md:flex-1 md:max-w-xl">
+            <label for="searchInput" class="sr-only">${t("searchBtn")}</label>
+            <div class="relative flex items-center">
+              <i class="fa-solid fa-magnifying-glass absolute left-4 text-stone-400 text-sm" aria-hidden="true"></i>
+              <input id="searchInput" name="q" type="search" value="${escapeHtml(q)}" placeholder="${escapeHtml(t("searchPh"))}" autocomplete="off"
+                class="w-full h-11 pl-10 pr-24 rounded-full bg-stone-100 border border-transparent text-[15px] text-stone-900 placeholder-stone-400 focus:bg-white focus:border-stone-300 focus:outline-none focus:ring-4 focus:ring-amber-200/60">
+              <button type="submit" class="absolute right-1 h-9 px-4 rounded-full bg-stone-900 text-white text-sm font-bold hover:bg-stone-700">${t("searchBtn")}</button>
+            </div>
+          </form>
+          <nav class="hidden lg:flex items-center gap-5" aria-label="BALTIQ">
+            ${nav("how.html", t("navHow"), "how")}
+            ${nav("profile.html", t("navProfile"), "profile")}
+          </nav>
+          <div class="ml-auto flex items-center gap-1.5 sm:gap-2">
+            <label for="langSelect" class="sr-only">Language</label>
+            <select id="langSelect" class="h-10 bg-transparent border border-stone-200 text-sm font-bold text-stone-700 rounded-xl px-2 hover:border-stone-300">${langOptions}</select>
+            <a href="profile.html" class="hidden sm:inline-flex items-center gap-1.5 h-10 px-3 rounded-xl bg-amber-50 text-amber-800 text-sm font-bold border border-amber-200">
+              <i class="fa-solid fa-coins text-xs" aria-hidden="true"></i>${user.points} Pts
+            </a>
+            ${account}
+            <a href="sell.html" class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-amber-400 text-stone-900 text-sm font-extrabold hover:bg-amber-300">
+              <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i><span>${t("navSell")}</span>
+            </a>
+          </div>
         </div>
       </div>
+      <nav class="border-t border-stone-100" aria-label="${escapeHtml(t("catsTitle"))}">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 overflow-x-auto py-2 [scrollbar-width:none]">
+          <a href="index.html" data-spa data-nav-cat="" ${onIndex && !activeCat && !q ? 'aria-current="page"' : ""} class="${pill}">
+            <i class="fa-solid fa-house text-xs opacity-70" aria-hidden="true"></i>${t("home")}</a>
+          ${catLinks}
+        </div>
+      </nav>
     </header>`;
 }
 
 function footerHTML() {
+  const cats = CATEGORY_IDS.filter((id) => id !== "all")
+    .map((id) => `<li><a class="hover:text-white" href="index.html?cat=${id}">${t("cat." + id)}</a></li>`)
+    .join("");
+  const carriers = CARRIERS.map((c) => `<span class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-stone-300">${c.name}</span>`).join("");
   return `
-    <footer class="border-t border-slate-800 mt-16 py-8 text-base text-slate-400">
-      <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row gap-3 justify-between">
-        <p>${t("footer")}</p>
-        <p>${t("footerShip")} · <a class="text-cyan-400" href="admin.html">${t("navAdmin")}</a></p>
+    <footer class="bg-stone-950 text-stone-400 mt-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
+        <div class="space-y-4">
+          <a href="index.html" class="inline-flex items-center gap-2.5">
+            <span class="w-9 h-9 rounded-xl bg-amber-400 text-stone-900 grid place-items-center text-lg font-black">B</span>
+            <span class="text-2xl font-black tracking-tight text-white">BALTIQ</span>
+          </a>
+          <p class="text-sm leading-relaxed max-w-md">${t("footer")}</p>
+          <div class="flex flex-wrap gap-2">${carriers}</div>
+        </div>
+        <div>
+          <h2 class="text-white text-sm font-bold mb-4">${t("catsTitle")}</h2>
+          <ul class="space-y-2 text-sm">${cats}</ul>
+        </div>
+        <div>
+          <h2 class="text-white text-sm font-bold mb-4">${t("help")}</h2>
+          <ul class="space-y-2 text-sm">
+            <li><a class="hover:text-white" href="how.html">${t("navHow")}</a></li>
+            <li><a class="hover:text-white" href="lockers.html">${t("navLockers")}</a></li>
+            <li><a class="hover:text-white" href="sell.html">${t("navSell")}</a></li>
+            <li><a class="hover:text-white" href="profile.html">${t("navProfile")}</a></li>
+            <li><a class="hover:text-white" href="admin.html">${t("navAdmin")}</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row gap-2 justify-between text-xs">
+          <p>&copy; ${new Date().getFullYear()} BALTIQ · ${t("domains")}</p>
+          <p>${t("footerShip")}</p>
+        </div>
       </div>
     </footer>`;
 }
@@ -830,6 +911,26 @@ function inSubGroup(item, group) {
   if (item.subcategory === group) return true;
   const kids = typeof SUB_TREE !== "undefined" ? SUB_TREE[group] || [] : [];
   return kids.includes(item.subcategory);
+}
+
+function favButtonState(btn, on) {
+  btn.setAttribute("aria-pressed", on ? "true" : "false");
+  const icon = btn.querySelector("i");
+  if (icon) icon.className = `${on ? "fa-solid text-rose-500" : "fa-regular text-stone-700"} fa-heart`;
+}
+
+let favDelegationBound = false;
+function bindFavorites() {
+  if (favDelegationBound) return;
+  favDelegationBound = true;
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-fav]");
+    if (!btn) return;
+    e.preventDefault();
+    const id = btn.dataset.fav;
+    const on = toggleFavorite(id).includes(id);
+    document.querySelectorAll(`[data-fav="${CSS.escape(id)}"]`).forEach((b) => favButtonState(b, on));
+  });
 }
 
 function injectChrome(active) {
@@ -848,33 +949,45 @@ function injectChrome(active) {
       location.href = "index.html";
     };
   }
+  bindFavorites();
   if (window.BaltiqI18n) window.BaltiqI18n.applyI18n(document);
 }
 
 function productCard(raw) {
   const item = normalizeProduct(raw);
+  const href = `product.html?id=${encodeURIComponent(item.id)}`;
+  const text = escapeHtml(adText(item));
+  const fav = isFavorite(item.id);
+  const isNew = item.condition === "new";
+  const sub = item.subcategory ? subLabel(item.subcategory) : t("cat." + item.category);
   return `
-    <article class="bg-slate-800/60 border border-slate-700/60 rounded-2xl overflow-hidden hover:border-cyan-500/50 transition flex flex-col">
-      <a href="product.html?id=${encodeURIComponent(item.id)}" class="block group">
-        <div class="relative h-48 bg-slate-900 overflow-hidden">
-          <img src="${escapeHtml(item.image)}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-          <span class="absolute top-3 right-3 bg-slate-900/90 px-2.5 py-1 rounded-full text-[10px] font-extrabold border border-slate-700">${countryFlag(item.country)}</span>
+    <article class="group relative flex flex-col bg-white text-stone-900 rounded-2xl border border-stone-200 overflow-hidden transition hover:shadow-xl hover:shadow-stone-900/5 hover:-translate-y-0.5">
+      <a href="${href}" class="flex flex-col flex-1 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 rounded-2xl">
+        <div class="relative aspect-[4/5] bg-stone-100 overflow-hidden">
+          <img src="${escapeHtml(item.image)}" alt="${text.slice(0, 120)}" loading="lazy" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+          <div class="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5">
+            ${isNew ? `<span class="px-2 py-1 rounded-md bg-amber-400 text-stone-900 text-[11px] font-extrabold">${optLabel("new")}</span>` : ""}
+            <span class="px-2 py-1 rounded-md bg-white/90 backdrop-blur text-stone-800 text-[11px] font-bold">${countryFlag(item.country)}</span>
+          </div>
         </div>
-        <div class="p-4">
-          <h4 class="font-bold text-white text-base line-clamp-3 mb-2 leading-snug group-hover:text-cyan-400">${escapeHtml(adText(item))}</h4>
+        <div class="p-3.5 pb-2 flex flex-col gap-1.5 flex-1">
+          <div class="flex items-baseline gap-2">
+            <span class="text-lg font-extrabold tracking-tight">${item.price_eur} €</span>
+            <span class="text-xs font-bold text-amber-700">${item.price_points} Pts</span>
+          </div>
+          <h3 class="text-sm text-stone-700 leading-snug line-clamp-2 min-h-[2.5rem]">${text}</h3>
+          <p class="text-xs text-stone-500 truncate">${escapeHtml(sub)}</p>
         </div>
       </a>
-      <div class="px-4 pb-4 mt-auto">
-        <a href="profile.html?seller=${encodeURIComponent(item.seller)}" class="flex items-center gap-1 text-[10px] font-bold ${item.verified ? "text-emerald-400" : "text-rose-300"} mb-2 hover:underline">
-          <i class="fa-solid ${item.verified ? "fa-shield-check" : "fa-shield-halved"}"></i>
-            <span>${escapeHtml(item.seller)} ${item.verified ? "(Smart-ID)" : t("notVerified")}</span>
+      <button type="button" data-fav="${escapeHtml(item.id)}" aria-pressed="${fav}" aria-label="${escapeHtml(t("favorite"))}"
+        class="absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-white/90 backdrop-blur grid place-items-center shadow-sm transition hover:scale-110">
+        <i class="${fav ? "fa-solid text-rose-500" : "fa-regular text-stone-700"} fa-heart" aria-hidden="true"></i>
+      </button>
+      <div class="px-3.5 pb-3.5 flex items-center justify-between gap-2 text-xs">
+        <span class="inline-flex items-center gap-1 text-stone-500 min-w-0"><i class="fa-solid fa-location-dot text-[10px]" aria-hidden="true"></i><span class="truncate">${escapeHtml(item.city)}</span></span>
+        <a href="profile.html?seller=${encodeURIComponent(item.seller)}" class="inline-flex items-center gap-1 font-semibold ${item.verified ? "text-emerald-700" : "text-rose-600"} hover:underline min-w-0">
+          <i class="fa-solid ${item.verified ? "fa-circle-check" : "fa-circle-exclamation"} text-[10px]" aria-hidden="true"></i><span class="truncate">${escapeHtml(item.seller)}</span>
         </a>
-        <div class="flex items-center gap-2 mb-3">
-          <span class="text-lg font-black text-white">${item.price_eur} €</span>
-          <span class="text-[10px] text-slate-400 font-bold">=</span>
-          <span class="text-[10px] font-extrabold text-amber-300 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">${item.price_points} Pts</span>
-        </div>
-        <a href="product.html?id=${encodeURIComponent(item.id)}" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 text-base font-bold py-3 rounded-xl flex items-center justify-center gap-2">${t("openCard")}</a>
       </div>
     </article>`;
 }
@@ -924,6 +1037,7 @@ window.Baltiq = {
   requireVerified,
   injectChrome,
   productCard,
+  categoryIcon,
   inSubGroup,
   countryFlag,
   escapeHtml,

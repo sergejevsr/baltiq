@@ -588,6 +588,62 @@ const I18N = {
   },
 };
 
+const UI_EXTRA = {
+  ru: {
+    home: "Главная", searchBtn: "Найти", heroCta: "Смотреть товары", heroSell: "Начать продавать",
+    catsTitle: "Категории", clothesTitle: "Одежда и обувь", clothesLead: "Женское, мужское, обувь и аксессуары — выберите раздел.",
+    seeAll: "Смотреть все", freshTitle: "Свежие объявления", itemsCount: "шт.", country: "Страна",
+    sortLabel: "Сортировка", sortNew: "Сначала новые", sortCheap: "Сначала дешевле", sortExp: "Сначала дороже",
+    allSection: "Весь раздел", resultsFor: "Результаты по запросу", reset: "Сбросить фильтры", sections: "Разделы",
+    trust1: "Безопасная сделка", trust1Sub: "Деньги у сайта до получения", allConditions: "Любое состояние",
+    verifiedSeller: "Проверен Smart-ID", deals: "сделок", description: "Описание", details: "Характеристики",
+    similar: "Похожие товары", popularClothes: "Популярное в одежде", help: "Помощь", favorite: "В избранное",
+  },
+  lv: {
+    home: "Sākums", searchBtn: "Meklēt", heroCta: "Skatīt preces", heroSell: "Sākt pārdot",
+    catsTitle: "Kategorijas", clothesTitle: "Apģērbs un apavi", clothesLead: "Sievietēm, vīriešiem, apavi un aksesuāri — izvēlieties sadaļu.",
+    seeAll: "Skatīt visu", freshTitle: "Jaunākie sludinājumi", itemsCount: "gab.", country: "Valsts",
+    sortLabel: "Kārtot", sortNew: "Jaunākās", sortCheap: "Lētākās", sortExp: "Dārgākās",
+    allSection: "Visa sadaļa", resultsFor: "Meklēšanas rezultāti", reset: "Notīrīt filtrus", sections: "Sadaļas",
+    trust1: "Drošs darījums", trust1Sub: "Nauda pie mums līdz saņemšanai", allConditions: "Jebkurš stāvoklis",
+    verifiedSeller: "Pārbaudīts ar Smart-ID", deals: "darījumi", description: "Apraksts", details: "Parametri",
+    similar: "Līdzīgas preces", popularClothes: "Populārākais apģērbā", help: "Palīdzība", favorite: "Saglabāt",
+  },
+  lt: {
+    home: "Pradžia", searchBtn: "Ieškoti", heroCta: "Žiūrėti prekes", heroSell: "Pradėti parduoti",
+    catsTitle: "Kategorijos", clothesTitle: "Drabužiai ir avalynė", clothesLead: "Moterims, vyrams, avalynė ir aksesuarai — pasirinkite skyrių.",
+    seeAll: "Žiūrėti visus", freshTitle: "Nauji skelbimai", itemsCount: "vnt.", country: "Šalis",
+    sortLabel: "Rikiuoti", sortNew: "Naujausi", sortCheap: "Pigiausi", sortExp: "Brangiausi",
+    allSection: "Visas skyrius", resultsFor: "Paieškos rezultatai", reset: "Išvalyti filtrus", sections: "Skyriai",
+    trust1: "Saugus sandoris", trust1Sub: "Pinigai saugomi iki atsiėmimo", allConditions: "Bet kokia būklė",
+    verifiedSeller: "Patikrinta Smart-ID", deals: "sandoriai", description: "Aprašymas", details: "Savybės",
+    similar: "Panašios prekės", popularClothes: "Populiaru drabužiuose", help: "Pagalba", favorite: "Išsaugoti",
+  },
+  et: {
+    home: "Avaleht", searchBtn: "Otsi", heroCta: "Vaata tooteid", heroSell: "Alusta müümist",
+    catsTitle: "Kategooriad", clothesTitle: "Riided ja jalatsid", clothesLead: "Naistele, meestele, jalatsid ja aksessuaarid — vali jaotis.",
+    seeAll: "Vaata kõiki", freshTitle: "Värsked kuulutused", itemsCount: "tk", country: "Riik",
+    sortLabel: "Sorteeri", sortNew: "Uuemad enne", sortCheap: "Odavamad enne", sortExp: "Kallimad enne",
+    allSection: "Kogu jaotis", resultsFor: "Otsingu tulemused", reset: "Lähtesta filtrid", sections: "Jaotised",
+    trust1: "Turvaline tehing", trust1Sub: "Raha hoitakse kuni kättesaamiseni", allConditions: "Iga seisukord",
+    verifiedSeller: "Smart-ID kinnitatud", deals: "tehingut", description: "Kirjeldus", details: "Omadused",
+    similar: "Sarnased tooted", popularClothes: "Populaarne riietes", help: "Abi", favorite: "Salvesta",
+  },
+  en: {
+    home: "Home", searchBtn: "Search", heroCta: "Browse items", heroSell: "Start selling",
+    catsTitle: "Categories", clothesTitle: "Clothing & shoes", clothesLead: "Women, men, shoes and accessories — pick a section.",
+    seeAll: "See all", freshTitle: "Fresh listings", itemsCount: "items", country: "Country",
+    sortLabel: "Sort", sortNew: "Newest first", sortCheap: "Price: low to high", sortExp: "Price: high to low",
+    allSection: "Whole section", resultsFor: "Search results", reset: "Reset filters", sections: "Sections",
+    trust1: "Safe deal", trust1Sub: "Escrow until pickup", allConditions: "Any condition",
+    verifiedSeller: "Smart-ID verified", deals: "deals", description: "Description", details: "Details",
+    similar: "Similar items", popularClothes: "Popular in clothing", help: "Help", favorite: "Save",
+  },
+};
+Object.keys(UI_EXTRA).forEach((code) => {
+  if (I18N[code]) I18N[code] = { ...UI_EXTRA[code], ...I18N[code] };
+});
+
 const LANG_META = {
   ru: { label: "Русский", locale: "ru-RU" },
   lv: { label: "Latviešu", locale: "lv-LV" },
